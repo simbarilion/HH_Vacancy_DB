@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "hh-vacancy-db"
+version = "0.1.0"
+description = "Project for adding vacancies from websites as https://hh.ru to the database"
+authors = ["Nadezhda_Popova <nadezhdapopova13@yandex.ru>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.12"
+requests = "^2.32.5"
+python-dotenv = "^1.1.1"
+logging = "^0.4.9.6"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.1"
+pytest-cov = "^6.2.1"
+
+
+[tool.poetry.group.lint.dependencies]
+flake8 = "^7.3.0"
+mypy = "^1.17.1"
+isort = "^6.0.1"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
