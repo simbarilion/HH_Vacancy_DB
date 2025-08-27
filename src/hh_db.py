@@ -18,53 +18,49 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         return config()
 
     def create_database(self) -> None:
-        """Создает базу данных и таблицы для сохранения данных о каналах и видео"""
-        conn = psycopg2.connect(**self.params, dbname=self.base_dbname)
-        conn.autocommit = True
-        with conn.cursor() as cur:
-            cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (self.hh_dbname,))
-            is_exists = cur.fetchone()
-            if is_exists:
-                cur.execute(f"DROP DATABASE {self.hh_dbname}")
+        """Создает базу данных для хранения данных о компаниях и вакансиях сайта HeadHunter.ru"""
+        with psycopg2.connect(**self.params, dbname=self.base_dbname) as conn:
+            conn.autocommit = True
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (self.hh_dbname,))
+                is_exists = cur.fetchone()
+                if is_exists:
+                    cur.execute(f"DROP DATABASE {self.hh_dbname}")
+                cur.execute(f"CREATE DATABASE {self.hh_dbname}")
 
-        cur.execute(f"CREATE DATABASE {self.hh_dbname}")
-        conn.close()
+    def create_table_hh_companies(self) -> None:
+        """Создает таблицу для хранения данных о компаниях сайта HeadHunter.ru"""
+        with psycopg2.connect(**self.params, dbname=self.hh_dbname) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                CREATE TABLE hh_companies (
+                    company_id SERIAL NOT NULL,
+                    hh_employer_id VARCHAR NOT NULL UNIQUE,
+                    employer_name VARCHAR(255) NOT NULL,
+                    employer_url VARCHAR(255) NOT NULL,
 
-    def create_table_hh_companies(self):
-        conn = psycopg2.connect(**self.params, dbname=self.hh_dbname)
-        with conn.cursor() as cur:
-            cur.execute("""
-                        CREATE TABLE hh_companies (
-                            hh_company_id SERIAL NOT NULL,
-                            employer_id VARCHAR,
-                            employer_name VARCHAR(255) NOT NULL,
-                            employer_url VARCHAR(255) NOT NULL,
+                    CONSTRAINT pk_hh_companies_id PRIMARY KEY(company_id)
+                    )
+                """)
 
-                            CONSTRAINT pk_hh_companies_id PRIMARY KEY(employer_id)
-                            )
-                            """)
-        conn.commit()
-        conn.close()
+    def create_table_hh_vacancies(self) -> None:
+        """Создает таблицу для хранения данных о вакансиях сайта HeadHunter.ru"""
+        with psycopg2.connect(**self.params, dbname=self.hh_dbname) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                CREATE TABLE hh_vacancies (
+                    vacancy_id SERIAL NOT NULL,
+                    hh_vac_id VARCHAR NOT NULL UNIQUE,
+                    vac_name VARCHAR(255) NOT NULL,
+                    vac_url VARCHAR(255) NOT NULL,
+                    salary_from INT DEFAULT 0,
+                    salary_to INT DEFAULT 0,
+                    vac_area VARCHAR(255),
+                    company_id INT NOT NULL,
 
-    def create_table_hh_vacancies(self):
-        conn = psycopg2.connect(**self.params, dbname=self.hh_dbname)
-        with conn.cursor() as cur:
-            cur.execute("""
-                        CREATE TABLE hh_vacancies (
-                            hh_vacancy_id SERIAL NOT NULL,
-                            vac_id VARCHAR,
-                            vac_name VARCHAR(255) NOT NULL,
-                            vac_url VARCHAR(255) NOT NULL,
-                            salary_from INT DEFAULT 0,
-                            salary_to INT DEFAULT 0,
-                            vac_area VARCHAR(255),
-                            employer_id VARCHAR(255) NOT NULL,
+                    CONSTRAINT pk_hh_vacancies_id PRIMARY KEY(vacancy_id),
 
-                            CONSTRAINT pk_hh_vacancies_id PRIMARY KEY(vac_id),
-
-                            CONSTRAINT fk_hh_vacancies_employer_id FOREIGN KEY(employer_id) 
-                            REFERENCES hh_companies(employer_id) ON DELETE CASCADE
-                            )
-                            """)
-        conn.commit()
-        conn.close()
+                    CONSTRAINT fk_hh_vacancies_company_id FOREIGN KEY(company_id) 
+                    REFERENCES hh_companies(company_id) ON DELETE CASCADE
+                    )
+                """)
