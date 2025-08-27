@@ -1,22 +1,35 @@
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
-from typing import Any, Iterator, Optional
+from typing import Any, Optional
 
 import requests
 
 from src.logging_config import LoggingConfigClassMixin
 
 
-class BaseAPISource(ABC):
+class BaseAPISource(ABC, LoggingConfigClassMixin):
     """Абстрактный класс для получения данных через API"""
+    def __init__(self) -> None:
+        """Конструктор для получения вакансий через API"""
+        super().__init__()
+        self.logger = self.configure()
 
-    def _get_response(self, url: str=None) -> Any:
+    def _get_response(self, url: str, headers: dict, params: Optional[dict]) -> Any:
         """Делает GET-запрос к API, возвращает JSON-ответ"""
-        pass
-
-    def _get_responses(self, url: str = None) -> Any:
-        """Делает GET-запрос к API, возвращает JSON-ответ"""
-        pass
+        try:
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            response.raise_for_status()
+            self.logger.info("GET-запрос успешно обработан")
+            result = response.json()
+            self.logger.info("Данные преобразованы в json-формат")
+        except requests.exceptions.RequestException as err:
+            self.logger.error(f"Ошибка запроса: {err}")
+            return {}
+        except JSONDecodeError as err:
+            self.logger.error(f"Ошибка преобразования данных в json-формат: {err}")
+            return {}
+        else:
+            return result
 
     @abstractmethod
     def get_formatted_data(self) -> list[dict]:
@@ -24,7 +37,7 @@ class BaseAPISource(ABC):
         pass
 
 
-class HeadHunterVacanciesSource(BaseAPISource, LoggingConfigClassMixin):
+class HeadHunterVacanciesSource(BaseAPISource):
     """Класс для получения через API данных сайта HeadHunter.ru о вакансиях отдельных работодателей"""
     def __init__(self) -> None:
         """Конструктор для получения вакансий через API"""
@@ -32,56 +45,41 @@ class HeadHunterVacanciesSource(BaseAPISource, LoggingConfigClassMixin):
         self._url = "https://api.hh.ru/vacancies"
         self._headers = {"User-Agent": "api-test-agent"}
         self._params = {"text": "",
-                         "page": 0,
-                         "per_page": 100,
-                         "only_with_salary": True,
-                         "currency": "RUR",
-                         "area": 113}
-        self.logger = self.configure()
-
-    def _get_response(self, max_pages: int=5) -> Iterator[dict]:
-        """Делает GET-запрос к API, возвращает JSON-ответ для каждой страницы"""
-        page = 0
-        while True:
-            self._params["page"] = page
-            try:
-                response = requests.get(self._url, headers=self._headers, params=self._params, timeout=10)
-                response.raise_for_status()
-                self.logger.info(f"Страница {page + 1} успешно получена")
-                page_result = response.json()
-                self.logger.info(f"Данные на странице {page + 1} преобразованы в json-формат")
-                yield page_result
-                total_pages = page_result.get("pages", 1)
-                if page + 1 >= total_pages or page + 1 >= max_pages:
-                    break
-                page += 1
-            except requests.exceptions.RequestException as err:
-                self.logger.error(f"Ошибка запроса на странице {page}: {err}")
-                break
-            except JSONDecodeError as err:
-                self.logger.error(f"Ошибка преобразования данных в json-формат: {err}")
-                break
-
-    def _get_total_data(self) -> list:
-        """Преобразует JSON-ответы для каждой страницы в единый список"""
-        total_data = []
-        for page_result in self._get_response():
-            data = page_result.get("items", [])
-            total_data.extend(data)
-        return total_data
+                        "page": 0,
+                        "per_page": 100,
+                        "only_with_salary": True,
+                        "currency": "RUR",
+                        "area": 113}
 
     def get_formatted_data(self) -> list[dict]:
         """Получает данные о вакансиях сайта HeadHunter и возвращает список словарей вакансий"""
-        vacancies = self._get_total_data()
+        vacancies = self._get_total_vacancies()
         self.logger.info(f"Собрано {len(vacancies)} вакансий")
         filtered = self.filter_vacancies(vacancies)
-        self.logger.info(f"Отфильтровано {len(vacancies)} вакансий")
         formatted = self.format_vacancies(filtered)
-        self.logger.info(f"Отформатировано {len(vacancies)} вакансий")
+        self.logger.info(f"Отформатировано {len(formatted)} вакансий")
         return formatted
 
+    def _get_total_vacancies(self, max_pages: int = 5) -> list[dict]:
+        """Проходит по страницам API и собирает все вакансии"""
+        total_data = []
+        page = 0
+        while True:
+            self._params["page"] = page
+            page_result = self._get_response(self._url, headers=self._headers, params=self._params)
+            if not page_result:
+                self.logger.warning(f"Не удалось получить данные с API (страница {page})")
+                break
+            data = page_result.get("items", [])
+            total_data.extend(data)
+            total_pages = page_result.get("pages", 1)
+            if page + 1 >= total_pages or page + 1 >= max_pages:
+                break
+            page += 1
+        return total_data
+
     @staticmethod
-    def filter_vacancies(vacancies):
+    def filter_vacancies(vacancies: list[dict]) -> list[dict]:
         """Фильтрует вакансии, в которых заработная плата в рублях"""
         return [vac for vac in vacancies if vac["salary"] and vac["salary"]["currency"] == "RUR"]
 
@@ -100,42 +98,24 @@ class HeadHunterVacanciesSource(BaseAPISource, LoggingConfigClassMixin):
         return vacancies
 
 
-class HeadHunterEmployersSource(BaseAPISource, LoggingConfigClassMixin):
+class HeadHunterEmployersSource(BaseAPISource):
     """Класс для получения через API данных сайта HeadHunter.ru об отдельных компаниях"""
-    def __init__(self, employers_id) -> None:
+    def __init__(self, employers_id: list[str]) -> None:
         """Конструктор для получения информации о компаниях через API"""
         super().__init__()
         self._employers_id = employers_id
         self._url = "https://api.hh.ru/employers"
         self._headers = {"User-Agent": "api-test-agent"}
-        self.logger = self.configure()
-
-    def _get_response(self, url: str=None) -> dict:
-        """Делает GET-запрос к API, возвращает JSON-ответ"""
-        try:
-            response = requests.get(url, headers=self._headers, timeout=10)
-            response.raise_for_status()
-            self.logger.info("GET-запрос успешно обработан")
-            result = response.json()
-            self.logger.info("Данные преобразованы в json-формат")
-        except requests.exceptions.RequestException as err:
-            self.logger.error(f"Ошибка запроса: {err}")
-            return {}
-        except JSONDecodeError as err:
-            self.logger.error(f"Ошибка преобразования данных в json-формат: {err}")
-            return {}
-        else:
-            return result
 
     def get_formatted_data(self) -> list[dict]:
         """Получает данные о компаниях сайта HeadHunter и возвращает список словарей компаний"""
         employers = []
-        base_url = self._url
         for employer_id in self._employers_id:
-            url = f"{base_url}/{employer_id}"
-            employer_inform = self._get_response(url)
-            formatted = self.format_employers(employer_inform)
-            employers.append(formatted)
+            url = f"{self._url}/{employer_id}"
+            employer_inform = self._get_response(url, headers=self._headers, params=None)
+            if employer_inform:
+                formatted = self.format_employers(employer_inform)
+                employers.append(formatted)
         self.logger.info(f"Собрана информация о {len(employers)} компаниях")
         return employers
 
