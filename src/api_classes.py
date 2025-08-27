@@ -98,7 +98,6 @@ class HeadHunterVacanciesSource(BaseAPISource):
              "url": str(vac.get("alternate_url") or ""),
              "salary_from": vac.get("salary", {}).get("from"),
              "salary_to": vac.get("salary", {}).get("to"),
-             "employer_name": str(vac.get("employer", {}).get("name") or ""),
              "area": str(vac.get("area", {}).get("name") or "")} for vac in vacancies_data]
         return vacancies
 
