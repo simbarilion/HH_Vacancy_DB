@@ -39,7 +39,7 @@ class BaseAPISource(ABC, LoggingConfigClassMixin):
 
 class HeadHunterVacanciesSource(BaseAPISource):
     """Класс для получения через API данных сайта HeadHunter.ru о вакансиях отдельных работодателей"""
-    def __init__(self, employers_id) -> None:
+    def __init__(self, employers_id: list[str]) -> None:
         """Конструктор для получения вакансий через API"""
         super().__init__()
         self._employers_id = employers_id
@@ -99,7 +99,6 @@ class HeadHunterVacanciesSource(BaseAPISource):
              "salary_from": vac.get("salary", {}).get("from"),
              "salary_to": vac.get("salary", {}).get("to"),
              "employer_name": str(vac.get("employer", {}).get("name") or ""),
-             "employer_url": str(vac.get("employer", {}).get("alternate_url") or ""),
              "area": str(vac.get("area", {}).get("name") or "")} for vac in vacancies_data]
         return vacancies
 
