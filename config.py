@@ -8,7 +8,7 @@ DATA_DIR = os.path.join(ROOT_DIR, "data")
 LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 
 
-def config(filename: str="database.ini", section: str="postgresql") -> dict:
+def config(filename: str = "database.ini", section: str = "postgresql") -> dict:
     """Возвращает параметры для подключения к БД"""
     parser = ConfigParser()
 

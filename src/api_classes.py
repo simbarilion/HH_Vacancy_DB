@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
-from typing import Optional
+from typing import Any, Optional
 
 import requests
 
@@ -12,13 +12,12 @@ class BaseAPISource(ABC, LoggingConfigClassMixin):
     def __init__(self) -> None:
         """Конструктор для получения вакансий через API"""
         super().__init__()
-        self._headers = None
         self.logger = self.configure()
 
-    def _get_response(self, url: str, params: Optional[dict]) -> dict:
+    def _get_response(self, url: str, headers: dict, params: Optional[dict]) -> Any:
         """Делает GET-запрос к API, возвращает JSON-ответ"""
         try:
-            response = requests.get(url, headers=self._headers, params=params, timeout=10)
+            response = requests.get(url, headers=headers, params=params, timeout=10)
             response.raise_for_status()
             self.logger.info("GET-запрос успешно обработан")
             result = response.json()
@@ -46,11 +45,11 @@ class HeadHunterVacanciesSource(BaseAPISource):
         self._url = "https://api.hh.ru/vacancies"
         self._headers = {"User-Agent": "api-test-agent"}
         self._params = {"text": "",
-                         "page": 0,
-                         "per_page": 100,
-                         "only_with_salary": True,
-                         "currency": "RUR",
-                         "area": 113}
+                        "page": 0,
+                        "per_page": 100,
+                        "only_with_salary": True,
+                        "currency": "RUR",
+                        "area": 113}
 
     def get_formatted_data(self) -> list[dict]:
         """Получает данные о вакансиях сайта HeadHunter и возвращает список словарей вакансий"""
@@ -61,13 +60,13 @@ class HeadHunterVacanciesSource(BaseAPISource):
         self.logger.info(f"Отформатировано {len(formatted)} вакансий")
         return formatted
 
-    def _get_total_vacancies(self, max_pages: int=5) -> list[dict]:
+    def _get_total_vacancies(self, max_pages: int = 5) -> list[dict]:
         """Проходит по страницам API и собирает все вакансии"""
         total_data = []
         page = 0
         while True:
             self._params["page"] = page
-            page_result = self._get_response(self._url, params=self._params)
+            page_result = self._get_response(self._url, headers=self._headers, params=self._params)
             if not page_result:
                 self.logger.warning(f"Не удалось получить данные с API (страница {page})")
                 break
@@ -113,7 +112,7 @@ class HeadHunterEmployersSource(BaseAPISource):
         employers = []
         for employer_id in self._employers_id:
             url = f"{self._url}/{employer_id}"
-            employer_inform = self._get_response(url, params=None)
+            employer_inform = self._get_response(url, headers=self._headers, params=None)
             if employer_inform:
                 formatted = self.format_employers(employer_inform)
                 employers.append(formatted)
