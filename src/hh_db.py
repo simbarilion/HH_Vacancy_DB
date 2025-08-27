@@ -35,10 +35,12 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         with conn.cursor() as cur:
             cur.execute("""
                         CREATE TABLE hh_companies (
-                            hh_companies_id SERIAL PRIMARY KEY,
-                            employer_id VARCHAR NOT NULL FOREIGN KEY REFERENCES,
-                            name VARCHAR(255) NOT NULL,
-                            url VARCHAR(255) NOT NULL
+                            hh_company_id SERIAL NOT NULL,
+                            employer_id VARCHAR,
+                            employer_name VARCHAR(255) NOT NULL,
+                            employer_url VARCHAR(255) NOT NULL,
+
+                            CONSTRAINT pk_hh_companies_id PRIMARY KEY(employer_id)
                             )
                             """)
         conn.commit()
@@ -49,14 +51,19 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         with conn.cursor() as cur:
             cur.execute("""
                         CREATE TABLE hh_vacancies (
-                            hh_vacancies_id SERIAL PRIMARY KEY,
-                            vac_id VARCHAR NOT NULL,
-                            name VARCHAR(255) NOT NULL,
-                            url VARCHAR(255) NOT NULL,
-                            salary_from,
-                            salary_to,
-                            employer_name FOREIGN KEY REFERENCES,
-                            area VARCHAR(255)
+                            hh_vacancy_id SERIAL NOT NULL,
+                            vac_id VARCHAR,
+                            vac_name VARCHAR(255) NOT NULL,
+                            vac_url VARCHAR(255) NOT NULL,
+                            salary_from INT DEFAULT 0,
+                            salary_to INT DEFAULT 0,
+                            vac_area VARCHAR(255),
+                            employer_id VARCHAR(255) NOT NULL,
+
+                            CONSTRAINT pk_hh_vacancies_id PRIMARY KEY(vac_id),
+
+                            CONSTRAINT fk_hh_vacancies_employer_id FOREIGN KEY(employer_id) 
+                            REFERENCES hh_companies(employer_id) ON DELETE CASCADE
                             )
                             """)
         conn.commit()
