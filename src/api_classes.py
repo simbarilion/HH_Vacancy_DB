@@ -7,39 +7,34 @@ import requests
 from src.logging_config import LoggingConfigClassMixin
 
 
-class BaseAPISource(ABC):
+class BaseAPISource(ABC, LoggingConfigClassMixin):
     """Абстрактный класс для получения данных через API"""
-
-    def _get_response(self, url: str=None) -> Any:
-        """Делает GET-запрос к API, возвращает JSON-ответ"""
-        pass
-
-    def _get_responses(self, url: str = None) -> Any:
-        """Делает GET-запрос к API, возвращает JSON-ответ"""
-        pass
-
-    @abstractmethod
-    def get_formatted_data(self) -> list[dict]:
-        """Получает данные через API и возвращает список словарей данных"""
-        pass
-
-
-class HeadHunterVacanciesSource(BaseAPISource, LoggingConfigClassMixin):
-    """Класс для получения через API данных сайта HeadHunter.ru о вакансиях отдельных работодателей"""
     def __init__(self) -> None:
         """Конструктор для получения вакансий через API"""
         super().__init__()
-        self._url = "https://api.hh.ru/vacancies"
-        self._headers = {"User-Agent": "api-test-agent"}
-        self._params = {"text": "",
-                         "page": 0,
-                         "per_page": 100,
-                         "only_with_salary": True,
-                         "currency": "RUR",
-                         "area": 113}
+        self._url = None
+        self._headers = None
+        self._params = None
         self.logger = self.configure()
 
-    def _get_response(self, max_pages: int=5) -> Iterator[dict]:
+    def _get_response(self, url: str=None) -> dict:
+        """Делает GET-запрос к API, возвращает JSON-ответ"""
+        try:
+            response = requests.get(url, headers=self._headers, timeout=10)
+            response.raise_for_status()
+            self.logger.info("GET-запрос успешно обработан")
+            result = response.json()
+            self.logger.info("Данные преобразованы в json-формат")
+        except requests.exceptions.RequestException as err:
+            self.logger.error(f"Ошибка запроса: {err}")
+            return {}
+        except JSONDecodeError as err:
+            self.logger.error(f"Ошибка преобразования данных в json-формат: {err}")
+            return {}
+        else:
+            return result
+
+    def _get_responses(self, max_pages: int=5) -> Iterator[dict]:
         """Делает GET-запрос к API, возвращает JSON-ответ для каждой страницы"""
         page = 0
         while True:
@@ -65,10 +60,30 @@ class HeadHunterVacanciesSource(BaseAPISource, LoggingConfigClassMixin):
     def _get_total_data(self) -> list:
         """Преобразует JSON-ответы для каждой страницы в единый список"""
         total_data = []
-        for page_result in self._get_response():
+        for page_result in self._get_responses():
             data = page_result.get("items", [])
             total_data.extend(data)
         return total_data
+
+    @abstractmethod
+    def get_formatted_data(self) -> list[dict]:
+        """Получает данные через API и возвращает список словарей данных"""
+        pass
+
+
+class HeadHunterVacanciesSource(BaseAPISource):
+    """Класс для получения через API данных сайта HeadHunter.ru о вакансиях отдельных работодателей"""
+    def __init__(self) -> None:
+        """Конструктор для получения вакансий через API"""
+        super().__init__()
+        self._url = "https://api.hh.ru/vacancies"
+        self._headers = {"User-Agent": "api-test-agent"}
+        self._params = {"text": "",
+                         "page": 0,
+                         "per_page": 100,
+                         "only_with_salary": True,
+                         "currency": "RUR",
+                         "area": 113}
 
     def get_formatted_data(self) -> list[dict]:
         """Получает данные о вакансиях сайта HeadHunter и возвращает список словарей вакансий"""
@@ -100,7 +115,7 @@ class HeadHunterVacanciesSource(BaseAPISource, LoggingConfigClassMixin):
         return vacancies
 
 
-class HeadHunterEmployersSource(BaseAPISource, LoggingConfigClassMixin):
+class HeadHunterEmployersSource(BaseAPISource):
     """Класс для получения через API данных сайта HeadHunter.ru об отдельных компаниях"""
     def __init__(self, employers_id) -> None:
         """Конструктор для получения информации о компаниях через API"""
@@ -108,24 +123,6 @@ class HeadHunterEmployersSource(BaseAPISource, LoggingConfigClassMixin):
         self._employers_id = employers_id
         self._url = "https://api.hh.ru/employers"
         self._headers = {"User-Agent": "api-test-agent"}
-        self.logger = self.configure()
-
-    def _get_response(self, url: str=None) -> dict:
-        """Делает GET-запрос к API, возвращает JSON-ответ"""
-        try:
-            response = requests.get(url, headers=self._headers, timeout=10)
-            response.raise_for_status()
-            self.logger.info("GET-запрос успешно обработан")
-            result = response.json()
-            self.logger.info("Данные преобразованы в json-формат")
-        except requests.exceptions.RequestException as err:
-            self.logger.error(f"Ошибка запроса: {err}")
-            return {}
-        except JSONDecodeError as err:
-            self.logger.error(f"Ошибка преобразования данных в json-формат: {err}")
-            return {}
-        else:
-            return result
 
     def get_formatted_data(self) -> list[dict]:
         """Получает данные о компаниях сайта HeadHunter и возвращает список словарей компаний"""
