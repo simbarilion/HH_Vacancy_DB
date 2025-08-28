@@ -13,7 +13,7 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         super().__init__()
         self._base_dbname = "postgres"
         self._hh_dbname = dbname if dbname else "headhunter_vacancies"
-        self._params = self.get_params()
+        self._params = self._get_params()
         self.logger = self.configure()
 
     def get_hh_dbname(self) -> str:
@@ -152,6 +152,6 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                 """)
 
     @staticmethod
-    def get_params() -> dict:
+    def _get_params() -> dict:
         """Возвращает параметры подключения из database.ini"""
         return config()

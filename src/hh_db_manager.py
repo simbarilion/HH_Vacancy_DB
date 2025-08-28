@@ -12,7 +12,7 @@ class HeadHunterDataBaseClient(LoggingConfigClassMixin):
         """Конструктор класса"""
         super().__init__()
         self._hh_dbname = "headhunter_vacancies"
-        self._params = self.get_params()
+        self._params = self._get_params()
         self.logger = self.configure()
 
     def _execute_query(self, query: str | tuple, params: Optional[str] = None) -> list:
@@ -22,6 +22,7 @@ class HeadHunterDataBaseClient(LoggingConfigClassMixin):
                 with conn.cursor() as cur:
                     cur.execute(query, params)
                     rows = cur.fetchall()
+            self.logger.info(f"Запрос к базе данных {self._hh_dbname} выполнен успешно")
             return rows  # type: ignore
         except psycopg2.Error as e:
             self.logger.error(f"Ошибка при выполнении запроса: {e}")
@@ -81,6 +82,6 @@ class HeadHunterDataBaseClient(LoggingConfigClassMixin):
         return self._execute_query(query, key_word)
 
     @staticmethod
-    def get_params() -> dict:
+    def _get_params() -> dict:
         """Возвращает параметры подключения из database.ini"""
         return config()
