@@ -8,11 +8,11 @@ from src.logging_config import LoggingConfigClassMixin
 
 class HeadHunterDataBase(LoggingConfigClassMixin):
     """Класс для создания базы данных с компаниями и вакансиями сайта HeadHunter.ru"""
-    def __init__(self, dbname: Optional[str]) -> None:
+    def __init__(self, dbname: Optional[str] = "headhunter_vacancies") -> None:
         """Конструктор класса"""
         super().__init__()
         self._base_dbname = "postgres"
-        self._hh_dbname = dbname if dbname else "headhunter_vacancies"
+        self._hh_dbname = dbname
         self._params = self._get_params()
         self.logger = self.configure()
 
@@ -95,7 +95,6 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                     cur.execute("SELECT COUNT(*) FROM hh_companies")
                     amount = cur.fetchone()[0]
             self.logger.info(f"В таблицу hh_companies добавлено {amount} вакансий")
-
         except psycopg2.Error as e:
             self.logger.error(f"Ошибка при добавлении данных в таблицу hh_companies: {e}")
 
@@ -131,25 +130,27 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                     cur.execute("SELECT COUNT(*) FROM hh_vacancies")
                     amount = cur.fetchone()[0]
             self.logger.info(f"В таблицу hh_vacancies добавлено {amount} вакансий")
-
         except psycopg2.Error as e:
             self.logger.error(f"Ошибка при добавлении данных в таблицу hh_vacancies: {e}")
 
     def add_avg_salary_to_hh_vacancies(self) -> None:
         """Добавление и вычисление атрибута 'average_salary' в таблице 'hh_vacancies'"""
-        with psycopg2.connect(**self._params, dbname=self._hh_dbname) as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                ALTER TABLE hh_vacancies ADD COLUMN IF NOT EXISTS average_salary REAL;""")
-                cur.execute("""
-                UPDATE hh_vacancies
-                SET average_salary = CASE
-                    WHEN salary_from > 0 AND salary_to > 0 THEN (salary_from + salary_to) / 2
-                    WHEN salary_from = 0 THEN salary_to
-                    WHEN salary_to = 0 THEN salary_from
-                    ELSE NULL
-                END;
-                """)
+        try:
+            with psycopg2.connect(**self._params, dbname=self._hh_dbname) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                    ALTER TABLE hh_vacancies ADD COLUMN IF NOT EXISTS average_salary REAL;""")
+                    cur.execute("""
+                    UPDATE hh_vacancies
+                    SET average_salary = CASE
+                        WHEN salary_from > 0 AND salary_to > 0 THEN (salary_from + salary_to) / 2
+                        WHEN salary_from = 0 THEN salary_to
+                        WHEN salary_to = 0 THEN salary_from
+                        ELSE NULL
+                    END;
+                    """)
+        except psycopg2.Error as e:
+            self.logger.error(f"Ошибка при изменении таблицы hh_vacancies: {e}")
 
     @staticmethod
     def _get_params() -> dict:
