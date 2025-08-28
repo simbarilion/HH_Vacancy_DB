@@ -6,7 +6,7 @@ from config import config
 from src.logging_config import LoggingConfigClassMixin
 
 
-class HeadHunterDataBaseClient(LoggingConfigClassMixin):
+class HeadHunterDataBaseManager(LoggingConfigClassMixin):
     """Класс для создания запросов к базе данных с компаниями и вакансиями сайта HeadHunter.ru"""
     def __init__(self) -> None:
         """Конструктор класса"""
@@ -31,7 +31,7 @@ class HeadHunterDataBaseClient(LoggingConfigClassMixin):
     def get_companies_and_vacancies_count(self) -> list:
         """Получает список всех компаний и количество вакансий у каждой компании"""
         query = """
-                SELECT c.employer_name, COUNT(v.vacancy_id) AS vacancies_count 
+                SELECT c.employer_name, COUNT(v.vacancy_id) AS vacancies_count, c.employer_url 
                 FROM hh_companies AS c
                 JOIN hh_vacancies AS v ON c.company_id = v.company_id
                 GROUP BY c.employer_name
@@ -42,7 +42,7 @@ class HeadHunterDataBaseClient(LoggingConfigClassMixin):
     def get_all_vacancies(self) -> list:
         """Получает список всех вакансий"""
         query = """
-                SELECT c.employer_name, v.vac_name, v.salary_from, v.salary_to, vac_url
+                SELECT c.employer_name, v.vac_name, v.salary_from, v.salary_to, v.vac_area, v.vac_url
                 FROM hh_companies as c
                 JOIN hh_vacancies as v ON c.company_id = v.company_id
                 ORDER BY c.employer_name, v.vac_name;
@@ -52,7 +52,7 @@ class HeadHunterDataBaseClient(LoggingConfigClassMixin):
     def get_avg_salary(self) -> list:
         """Получает среднюю зарплату по вакансиям у каждой компании"""
         query = """
-                SELECT c.employer_name, AVG(v.average_salary) AS average_salary
+                SELECT c.employer_name, AVG(v.average_salary) AS average_salary, c.employer_url 
                 FROM hh_vacancies AS v
                 JOIN hh_companies AS c ON c.company_id = v.company_id
                 GROUP BY c.employer_name
@@ -63,7 +63,7 @@ class HeadHunterDataBaseClient(LoggingConfigClassMixin):
     def get_vacancies_with_higher_salary(self) -> list:
         """Получает список всех вакансий, у которых зарплата выше средней по всем вакансиям"""
         query = """
-                SELECT v.vac_name, c.employer_name, v.average_salary 
+                SELECT c.employer_name, v.vac_name, v.salary_from, v.salary_to, v.vac_area, v.vac_url
                 FROM hh_vacancies AS v
                 JOIN hh_companies AS c ON c.company_id = v.company_id
                 WHERE v.average_salary > (SELECT AVG(v.average_salary) FROM hh_vacancies)
@@ -74,7 +74,7 @@ class HeadHunterDataBaseClient(LoggingConfigClassMixin):
     def get_vacancies_with_keyword(self, key_word: str) -> list:
         """Получает список всех вакансий по ключевому слову в названии"""
         query = ("""
-                SELECT v.vac_name, c.employer_name, salary_from, salary_to, v.vac_url
+                SELECT c.employer_name, v.vac_name, v.salary_from, v.salary_to, v.vac_area, v.vac_url
                 FROM hh_vacancies AS v
                 JOIN hh_companies AS c ON c.company_id = v.company_id
                 WHERE v.vac_name ILIKE %s""",
