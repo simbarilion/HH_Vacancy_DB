@@ -39,12 +39,13 @@ class BaseAPISource(ABC, LoggingConfigClassMixin):
 
 class HeadHunterVacanciesSource(BaseAPISource):
     """Класс для получения через API данных сайта HeadHunter.ru о вакансиях отдельных работодателей"""
-    def __init__(self) -> None:
+    def __init__(self, employers_id: list[str]) -> None:
         """Конструктор для получения вакансий через API"""
         super().__init__()
+        self._employers_id = employers_id
         self._url = "https://api.hh.ru/vacancies"
         self._headers = {"User-Agent": "api-test-agent"}
-        self._params = {"text": "",
+        self._params = {"employer_id": "",
                         "page": 0,
                         "per_page": 100,
                         "only_with_salary": True,
@@ -52,13 +53,18 @@ class HeadHunterVacanciesSource(BaseAPISource):
                         "area": 113}
 
     def get_formatted_data(self) -> list[dict]:
-        """Получает данные о вакансиях сайта HeadHunter и возвращает список словарей вакансий"""
-        vacancies = self._get_total_vacancies()
-        self.logger.info(f"Собрано {len(vacancies)} вакансий")
-        filtered = self.filter_vacancies(vacancies)
-        formatted = self.format_vacancies(filtered)
-        self.logger.info(f"Отформатировано {len(formatted)} вакансий")
-        return formatted
+        """Получает данные о вакансиях сайта HeadHunter от отдельных компаний и возвращает список словарей вакансий"""
+        employers_vacancies = []
+        for employer_id in self._employers_id:
+            self._params["employer_id"] = employer_id
+            vacancies = self._get_total_vacancies()
+            self.logger.info(f"Собрано {len(vacancies)} вакансий")
+            filtered = self.filter_vacancies(vacancies)
+            formatted = self.format_vacancies(filtered)
+            self.logger.info(f"Отформатировано {len(formatted)} вакансий")
+            emp_vacancies = {employer_id: formatted}
+            employers_vacancies.append(emp_vacancies)
+        return employers_vacancies
 
     def _get_total_vacancies(self, max_pages: int = 5) -> list[dict]:
         """Проходит по страницам API и собирает все вакансии"""
@@ -92,8 +98,6 @@ class HeadHunterVacanciesSource(BaseAPISource):
              "url": str(vac.get("alternate_url") or ""),
              "salary_from": vac.get("salary", {}).get("from"),
              "salary_to": vac.get("salary", {}).get("to"),
-             "employer_name": str(vac.get("employer", {}).get("name") or ""),
-             "employer_url": str(vac.get("employer", {}).get("alternate_url") or ""),
              "area": str(vac.get("area", {}).get("name") or "")} for vac in vacancies_data]
         return vacancies
 
