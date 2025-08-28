@@ -8,10 +8,10 @@ from src.logging_config import LoggingConfigClassMixin
 
 class HeadHunterDataBaseManager(LoggingConfigClassMixin):
     """Класс для создания запросов к базе данных с компаниями и вакансиями сайта HeadHunter.ru"""
-    def __init__(self) -> None:
-        """Конструктор класса"""
+    def __init__(self, db_name: str) -> None:
+        """Конструктор класса HeadHunterDataBaseManager"""
         super().__init__()
-        self._hh_dbname = "headhunter_vacancies"
+        self._hh_dbname = db_name
         self._params = self._get_params()
         self.logger = self.configure()
 

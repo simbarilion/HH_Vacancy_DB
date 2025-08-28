@@ -1,5 +1,3 @@
-from typing import Optional
-
 import psycopg2
 
 from config import config
@@ -8,7 +6,7 @@ from src.logging_config import LoggingConfigClassMixin
 
 class HeadHunterDataBase(LoggingConfigClassMixin):
     """Класс для создания базы данных с компаниями и вакансиями сайта HeadHunter.ru"""
-    def __init__(self, dbname: Optional[str] = "headhunter_vacancies") -> None:
+    def __init__(self, dbname: str = "headhunter_vacancies") -> None:
         """Конструктор класса"""
         super().__init__()
         self._base_dbname = "postgres"
