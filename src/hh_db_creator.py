@@ -9,9 +9,9 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
     def __init__(self, dbname: str = "headhunter_vacancies") -> None:
         """Конструктор класса"""
         super().__init__()
-        self._base_dbname = "postgres"
+        self._base_dbname: str = "postgres"
         self._hh_dbname = dbname
-        self._params = self._get_params()
+        self._params: dict = self._get_params()
         self.logger = self.configure()
 
     def get_hh_dbname(self) -> str:
@@ -147,6 +147,7 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                         ELSE NULL
                     END;
                     """)
+            self.logger.info("В таблицу hh_vacancies добавлен атрибут average_salary")
         except psycopg2.Error as e:
             self.logger.error(f"Ошибка при изменении таблицы hh_vacancies: {e}")
 

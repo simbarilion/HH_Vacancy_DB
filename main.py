@@ -13,7 +13,7 @@ def main() -> None:
     """ """
     try:
         user_interaction = UserInteraction()
-        user_interaction.get_greeting()
+        print(user_interaction.get_greeting())
         data_coordinator = HeadHunterDataCoordinator(EMPLOYER_ID, DB_NAME)
         data_coordinator.create_hh_database()
         while True:

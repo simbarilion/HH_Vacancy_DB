@@ -12,8 +12,8 @@ class HeadHunterDataCoordinator:
         """Конструктор класса HeadHunterDataCoordinator"""
         self.employers_id = employers_id
         self.db_name = db_name
-        self.hh_vacancies = self.get_hh_vacancies()
-        self.hh_companies = self.get_hh_companies()
+        self.hh_vacancies: list[dict] = self.get_hh_vacancies()
+        self.hh_companies: list[dict] = self.get_hh_companies()
 
     def get_hh_vacancies(self) -> list[dict]:
         """Возвращает информацию о вакансиях с сайта HeadHunter.ru, полученные через API"""

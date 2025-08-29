@@ -12,7 +12,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
         """Конструктор класса HeadHunterDataBaseManager"""
         super().__init__()
         self._hh_dbname = db_name
-        self._params = self._get_params()
+        self._params: dict = self._get_params()
         self.logger = self.configure()
 
     def _execute_query(self, query: str | tuple, params: Optional[str] = None) -> list:
