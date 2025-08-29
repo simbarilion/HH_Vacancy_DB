@@ -14,6 +14,7 @@ def main() -> None:
     try:
         user_interaction = UserInteraction()
         print(user_interaction.get_greeting())
+        print("Идет загрузка данных ...")
         data_coordinator = HeadHunterDataCoordinator(EMPLOYER_ID, DB_NAME)
         data_coordinator.create_hh_database()
         while True:
@@ -23,7 +24,8 @@ def main() -> None:
             if not user_interaction.is_restart():
                 print(user_interaction.get_farewell())
                 break
-    except Exception:
+    except Exception as e:
+        print(e)
         print("Не удалось загрузить данные. Попробуйте повторить позже")
 
 

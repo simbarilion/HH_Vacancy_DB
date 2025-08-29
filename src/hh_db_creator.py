@@ -19,7 +19,8 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
 
     def create_database(self) -> None:
         """Создает базу данных для хранения данных о компаниях и вакансиях сайта HeadHunter.ru"""
-        with psycopg2.connect(**self._params, dbname=self._base_dbname) as conn:
+        try:
+            conn = psycopg2.connect(**self._params, dbname=self._base_dbname)
             conn.autocommit = True
             with conn.cursor() as cur:
                 cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (self._hh_dbname,))
@@ -29,6 +30,8 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                     self.logger.info(f"База данных {self._hh_dbname} удалена")
                 cur.execute(f"CREATE DATABASE {self._hh_dbname}")
                 self.logger.info(f"База данных {self._hh_dbname} создана")
+        except psycopg2.Error as e:
+            self.logger.error(f"Ошибка при создании базы данных: {e}")
 
     def create_table_hh_companies(self) -> None:
         """Создает таблицу для хранения данных о компаниях сайта HeadHunter.ru"""
@@ -60,10 +63,10 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                         hh_vac_id VARCHAR NOT NULL UNIQUE,
                         vac_name VARCHAR(255) NOT NULL,
                         vac_url VARCHAR(255) NOT NULL,
-                        salary_from INT DEFAULT 0,
-                        salary_to INT DEFAULT 0,
-                        vac_area VARCHAR(255),
                         company_id INT NOT NULL,
+                        vac_area VARCHAR(255),
+                        salary_from INT,
+                        salary_to INT,
 
                         CONSTRAINT pk_hh_vacancies_id PRIMARY KEY(vacancy_id),
 
@@ -112,7 +115,7 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                                     """
                                     INSERT INTO hh_vacancies 
                                     (hh_vac_id, vac_name, vac_url, company_id, vac_area, salary_from, salary_to)
-                                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                                    VALUES (%s, %s, %s, %s, %s, COALESCE(%s, 0), COALESCE(%s, 0))
                                     RETURNING vacancy_id;
                                     """,
                                     (vac.get('vac_id'),
