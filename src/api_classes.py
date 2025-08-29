@@ -43,14 +43,14 @@ class HeadHunterVacanciesSource(BaseAPISource):
         """Конструктор для получения вакансий через API"""
         super().__init__()
         self._employers_id = employers_id
-        self._url = "https://api.hh.ru/vacancies"
-        self._headers = {"User-Agent": "api-test-agent"}
-        self._params = {"employer_id": "",
-                        "page": 0,
-                        "per_page": 100,
-                        "only_with_salary": True,
-                        "currency": "RUR",
-                        "area": 113}
+        self._url: str = "https://api.hh.ru/vacancies"
+        self._headers: dict = {"User-Agent": "api-test-agent"}
+        self._params: dict = {"employer_id": "",
+                              "page": 0,
+                              "per_page": 100,
+                              "only_with_salary": True,
+                              "currency": "RUR",
+                              "area": 113}
 
     def get_formatted_data(self) -> list[dict]:
         """Получает данные о вакансиях сайта HeadHunter от отдельных компаний и возвращает список словарей вакансий"""
@@ -96,8 +96,8 @@ class HeadHunterVacanciesSource(BaseAPISource):
             {"vac_id": str(vac.get("id") or ""),
              "name": str(vac.get("name") or ""),
              "url": str(vac.get("alternate_url") or ""),
-             "salary_from": vac.get("salary", {}).get("from"),
-             "salary_to": vac.get("salary", {}).get("to"),
+             "salary_from": vac.get("salary", {}).get("from") or 0,
+             "salary_to": vac.get("salary", {}).get("to") or 0,
              "area": str(vac.get("area", {}).get("name") or "")} for vac in vacancies_data]
         return vacancies
 
@@ -108,8 +108,8 @@ class HeadHunterEmployersSource(BaseAPISource):
         """Конструктор для получения информации о компаниях через API"""
         super().__init__()
         self._employers_id = employers_id
-        self._url = "https://api.hh.ru/employers"
-        self._headers = {"User-Agent": "api-test-agent"}
+        self._url: str = "https://api.hh.ru/employers"
+        self._headers: dict = {"User-Agent": "api-test-agent"}
 
     def get_formatted_data(self) -> list[dict]:
         """Получает данные о компаниях сайта HeadHunter и возвращает список словарей компаний"""

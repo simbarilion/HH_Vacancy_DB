@@ -1,27 +1,33 @@
-def user_interaction() -> None:
-    print("Добрый день!")
-    while True:
-        choice = 0
-        while choice not in range(1, 7):
-            print("""
-            Пожалуйста, выберите пункт меню:
-            1. Список компаний и количество вакансий 
-            2. Информация обо всех вакансиях
-            3. Средняя зарплата по вакансиям у каждой компании
-            4. Список вакансий с зарплатой выше средней
-            5. Список вакансий по ключевому слову в названии
-            6. Выйти из программы
-            """)
-            choice = int(input(": "))
+from src.hh_data_coordinator import HeadHunterDataCoordinator
+from src.user_interaction import UserInteraction
 
-        if choice == 5:
-            search_query = input("Введите ключевое слово для поискового запроса: ")
+# employer_id = {"Крок": "2987", "Точка банк": "2324020", "IBS": "139", "Aston": "6093775", "VK": "15478",
+#                "Контур": "41862", "Тензор": "67611", "Лаборатория Касперского": "1057", "2ГИС": "64174",
+#                "Skyeng": "1122462"}
 
-        restart = input("Сделать новую выборку? (да: 1, нет: 0): ")
-        if int(restart) != 1:
-            print("До новых встреч!")
-            break
+EMPLOYER_ID: list[str] = ["2987", "2324020", "139", "6093775", "15478", "41862", "67611", "1057", "64174", "1122462"]
+DB_NAME: str = "headhunter_vacancies"
+
+
+def main() -> None:
+    """ """
+    try:
+        user_interaction = UserInteraction()
+        print(user_interaction.get_greeting())
+        print("Идет загрузка данных ...")
+        data_coordinator = HeadHunterDataCoordinator(EMPLOYER_ID, DB_NAME)
+        data_coordinator.create_hh_database()
+        while True:
+            user_interaction.get_search_query()
+            print(data_coordinator.execute_query(user_interaction.choice, user_interaction.key_word))
+
+            if not user_interaction.is_restart():
+                print(user_interaction.get_farewell())
+                break
+    except Exception as e:
+        print(e)
+        print("Не удалось загрузить данные. Попробуйте повторить позже")
 
 
 if __name__ == "__main__":
-    user_interaction()
+    main()
