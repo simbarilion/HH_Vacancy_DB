@@ -21,7 +21,7 @@ class UserInteraction:
             if choice == 5:
                 self.get_key_word()
             if choice == 6:
-                print(self.get_farewell())
+                self.get_farewell()
                 raise SystemExit()
             self.choice = choice
 
@@ -44,9 +44,14 @@ class UserInteraction:
             return "Доброй ночи!"
 
     @staticmethod
-    def get_farewell() -> str:
-        """Возвращает 'До новых встреч' при завершении программы"""
-        return "До новых встреч"
+    def loading_output() -> None:
+        """Выводит сообщение о процессе загрузки данных"""
+        print("Идет загрузка данных ...")
+
+    @staticmethod
+    def get_farewell() -> None:
+        """Выводит сообщение при завершении программы"""
+        print("До новых встреч")
 
     @staticmethod
     def output_menu() -> str:
