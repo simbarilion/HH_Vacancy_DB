@@ -51,7 +51,7 @@ class UserInteraction:
     @staticmethod
     def get_farewell() -> None:
         """Выводит сообщение при завершении программы"""
-        print("До новых встреч")
+        print("До новых встреч!")
 
     @staticmethod
     def output_menu() -> str:

@@ -13,20 +13,35 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
         super().__init__()
         self._hh_dbname = db_name
         self._params: dict = self._get_params()
+        self.conn = None
         self.logger = self.configure()
+
+    def open_connection(self):
+        """Открывает соединение с базой данных"""
+        try:
+            self.conn = psycopg2.connect(**self._params, dbname=self._hh_dbname)
+            self.logger.info("Соединение с базой данных открыто")
+        except psycopg2.Error as e:
+            self.logger.error(f"Ошибка подключения к базе данных: {e}")
+            raise
+
+    def close_connection(self):
+        """Закрывает соединение с базой данных"""
+        if self.conn:
+            self.conn.close()
+            self.logger.info("Соединение с базой данных закрыто")
 
     def _execute_query(self, query: str | tuple, params: Optional[tuple] = None) -> list:
         """Выполняет запрос к базе данных и возвращает результат"""
         try:
-            with psycopg2.connect(**self._params, dbname=self._hh_dbname) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(query, params)
-                    rows = cur.fetchall()
+            with self.conn.cursor() as cur:
+                cur.execute(query, params)
+                rows = cur.fetchall()
             self.logger.info(f"Запрос к базе данных {self._hh_dbname} выполнен успешно")
             return rows  # type: ignore
         except psycopg2.Error as e:
             self.logger.error(f"Ошибка при выполнении запроса: {e}")
-            return []
+            raise
 
     def get_companies_and_vacancies_count(self) -> list:
         """Получает список всех компаний и количество вакансий у каждой компании"""
