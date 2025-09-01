@@ -25,7 +25,7 @@ class LoggingConfigClassMixin:
                  clear_log_on_start: bool = True,
                  fmt: str = "%(asctime)s - %(levelname)s - logger:%(name)s - module:%(module)s "
                             "- func:%(funcName)s:%(lineno)d - %(message)s") -> None:
-        """Конструктор для класса"""
+        """Конструктор для класса логгирования"""
         self.name = name or self._get_caller_module_name()
         self.level = level
         self.log_file = log_file or f"{self.name}.log"
