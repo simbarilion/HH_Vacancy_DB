@@ -16,7 +16,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
         self.conn = None
         self.logger = self.configure()
 
-    def open_connection(self):
+    def open_connection(self) -> None:
         """Открывает соединение с базой данных"""
         try:
             self.conn = psycopg2.connect(**self._params, dbname=self._hh_dbname)
@@ -25,7 +25,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
             self.logger.error(f"Ошибка подключения к базе данных: {e}")
             raise
 
-    def close_connection(self):
+    def close_connection(self) -> None:
         """Закрывает соединение с базой данных"""
         if self.conn:
             self.conn.close()
@@ -33,6 +33,8 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
 
     def _execute_query(self, query: str | tuple, params: Optional[tuple] = None) -> list:
         """Выполняет запрос к базе данных и возвращает результат"""
+        if self.conn is None:
+            raise RuntimeError("Соединение с базой данных не открыто")
         try:
             with self.conn.cursor() as cur:
                 cur.execute(query, params)
@@ -101,5 +103,5 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
 
     @staticmethod
     def _get_params() -> dict:
-        """Возвращает параметры подключения из database.ini"""
+        """Возвращает параметры подключения к базе данных"""
         return config()

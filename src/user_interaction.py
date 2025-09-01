@@ -5,6 +5,7 @@ from typing import Optional
 class UserInteraction:
     """Класс для взаимодействия с пользователем"""
     def __init__(self) -> None:
+        """Конструктор для класса UserInteraction"""
         self.choice: int = 0
         self.key_word: Optional[str] = None
 

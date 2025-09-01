@@ -14,7 +14,7 @@ class HeadHunterDataCoordinator:
         self.db_name = db_name
         self.hh_vacancies: list[dict] = self.get_hh_vacancies()
         self.hh_companies: list[dict] = self.get_hh_companies()
-        self.hh_query_manager = None
+        self.hh_query_manager: Optional[HeadHunterDataBaseManager] = None
 
     def get_hh_vacancies(self) -> list[dict]:
         """Возвращает информацию о вакансиях с сайта HeadHunter.ru, полученные через API"""
@@ -37,12 +37,16 @@ class HeadHunterDataCoordinator:
             hh_database.save_data_to_table_hh_vacancies(self.hh_vacancies)
             hh_database.add_avg_salary_to_hh_vacancies()
 
-    def create_db_manager_obj(self):
+    def create_db_manager_obj(self) -> None:
+        """Создает объект класса HeadHunterDataBaseManager, открывает соединение с базой данных"""
         self.hh_query_manager = HeadHunterDataBaseManager(self.db_name)
         self.hh_query_manager.open_connection()
 
     def execute_query(self, choice: int, key_word: Optional[str] = None) -> Any:
         """Возвращает данные из базы данных в соответствии с запросом"""
+        if self.hh_query_manager is None:
+            raise RuntimeError("Менеджер базы данных не создан")
+
         queries = {
             1: self.hh_query_manager.get_companies_and_vacancies_count,
             2: self.hh_query_manager.get_all_vacancies,
@@ -58,6 +62,8 @@ class HeadHunterDataCoordinator:
     @staticmethod
     def format_result(result: list, choice: int) -> Any:
         """Возвращает данные в виде таблицы"""
+        cleaned_result = [tuple("" if value == 0 else value for value in row) for row in result]
+
         headers = {
             1: ["Компания", "Количество вакансий", "Ссылка"],
             2: ["Компания", "Вакансия", "Зарплата от", "Зарплата до", "Город", "Ссылка"],
@@ -67,8 +73,9 @@ class HeadHunterDataCoordinator:
         }
 
         header = headers.get(choice, [])
-        return tabulate(result, headers=header, tablefmt="fancy_grid")
+        return tabulate(cleaned_result, headers=header, tablefmt="fancy_grid")
 
-    def close_db_manager_obj_connection(self):
+    def close_db_manager_obj_connection(self) -> None:
+        """Закрывает соединение с базой данных"""
         if self.hh_query_manager:
             self.hh_query_manager.close_connection()
