@@ -2,6 +2,7 @@ import pytest
 
 from src.api_classes import HeadHunterVacanciesSource, HeadHunterEmployersSource
 from src.hh_db_creator import HeadHunterDataBase
+from src.hh_db_manager import HeadHunterDataBaseManager
 
 
 @pytest.fixture
@@ -55,6 +56,12 @@ def row_employers() -> dict:
 @pytest.fixture
 def db():
     return HeadHunterDataBase("test_hh_db")
+
+
+@pytest.fixture
+def db_manager():
+    return HeadHunterDataBaseManager("test_hh_db_manager")
+
 
 @pytest.fixture
 def employers_vacancies():
