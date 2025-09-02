@@ -13,20 +13,20 @@ class UserInteraction:
         """Получает от пользователя выбор пункта меню"""
         choice = 0
         while choice not in range(1, 7):
-            print(self.output_menu())
+            print(self._output_menu())
             try:
                 choice = int(input("(Введите число от 1 до 6)\n: "))
             except ValueError:
                 print("Введено некорректное значение")
                 continue
             if choice == 5:
-                self.get_key_word()
+                self._get_key_word()
             if choice == 6:
                 self.get_farewell()
                 raise SystemExit()
             self.choice = choice
 
-    def get_key_word(self) -> None:
+    def _get_key_word(self) -> None:
         """Получает от пользователя ключевое слово для запроса по ключевому слову"""
         key_word = input("Введите ключевое слово для поискового запроса: ")
         self.key_word = key_word
@@ -55,7 +55,7 @@ class UserInteraction:
         print("До новых встреч!")
 
     @staticmethod
-    def output_menu() -> str:
+    def _output_menu() -> str:
         """Возвращает основное меню программы"""
         return """
                 Пожалуйста, выберите пункт меню:

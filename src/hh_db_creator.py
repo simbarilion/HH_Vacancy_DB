@@ -15,14 +15,14 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         self._base_dbname: str = "postgres"
         self._hh_dbname = dbname
         self._params: dict = self._get_params()
-        self.conn: Optional[connection] = None
+        self._conn: Optional[connection] = None
         self.logger = self.configure()
 
     def __enter__(self) -> Any:
         """Открывает соединение с базой данных"""
         try:
-            self.conn = psycopg2.connect(**self._params, dbname=self._hh_dbname)
-            self.conn.autocommit = False
+            self._conn = psycopg2.connect(**self._params, dbname=self._hh_dbname)
+            self._conn.autocommit = False
             self.logger.info("Соединение с базой данных открыто")
             return self
         except psycopg2.Error as e:
@@ -31,8 +31,8 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Закрывает соединение с базой данных"""
-        if self.conn is not None:
-            self.conn.close()
+        if self._conn is not None:
+            self._conn.close()
             self.logger.info("Соединение с базой данных закрыто")
 
     def get_hh_dbname(self) -> str:
@@ -42,15 +42,15 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
     def _execute(self, query: str, params: Any = None, fetch: bool = False) -> Any:
         """Вспомогательный метод для выполнения SQL-запросов"""
         try:
-            if self.conn is not None:
-                with self.conn.cursor() as cur:
+            if self._conn is not None:
+                with self._conn.cursor() as cur:
                     cur.execute(query, params)
                     if fetch:
                         return cur.fetchall()
-                    self.conn.commit()
+                    self._conn.commit()
         except psycopg2.Error as e:
-            if self.conn is not None:
-                self.conn.rollback()
+            if self._conn is not None:
+                self._conn.rollback()
             self.logger.error(f"ошибка при работе с базой данных: {e}")
             raise
 
@@ -110,8 +110,8 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         """Сохранение данных о компаниях сайта HeadHunter.ru в базу данных"""
         amount = 0
         try:
-            if self.conn is not None:
-                with self.conn.cursor() as cur:
+            if self._conn is not None:
+                with self._conn.cursor() as cur:
                     for emp in employers:
                         cur.execute(
                             """
@@ -124,11 +124,11 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                         )
                         if cur.fetchone():
                             amount += 1
-                self.conn.commit()
+                self._conn.commit()
             self.logger.info(f"В таблицу hh_companies добавлено {amount} компаний")
         except psycopg2.Error as e:
-            if self.conn is not None:
-                self.conn.rollback()
+            if self._conn is not None:
+                self._conn.rollback()
             self.logger.error(f"Ошибка при добавлении данных в таблицу hh_companies: {e}")
             raise
 
@@ -136,8 +136,8 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         """Сохранение данных о вакансиях компаний сайта HeadHunter.ru в базу данных"""
         amount = 0
         try:
-            if self.conn is not None:
-                with self.conn.cursor() as cur:
+            if self._conn is not None:
+                with self._conn.cursor() as cur:
                     for emp_vacs in employers_vacancies:
                         for hh_employer_id, vacancies in emp_vacs.items():
                             cur.execute("SELECT company_id FROM hh_companies WHERE hh_employer_id = %s",
@@ -166,11 +166,11 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                                 )
                                 if cur.fetchone():
                                     amount += 1
-                self.conn.commit()
+                self._conn.commit()
             self.logger.info(f"В таблицу hh_vacancies добавлено {amount} вакансий")
         except psycopg2.Error as e:
-            if self.conn is not None:
-                self.conn.rollback()
+            if self._conn is not None:
+                self._conn.rollback()
             self.logger.error(f"Ошибка при добавлении данных в таблицу hh_vacancies: {e}")
             raise
 
