@@ -3,6 +3,7 @@ import pytest
 from src.api_classes import HeadHunterVacanciesSource, HeadHunterEmployersSource
 from src.hh_db_creator import HeadHunterDataBase
 from src.hh_db_manager import HeadHunterDataBaseManager
+from src.user_interaction import UserInteraction
 
 
 @pytest.fixture
@@ -13,6 +14,21 @@ def api_vac_source():
 @pytest.fixture
 def api_companies_source():
     return HeadHunterEmployersSource(["1234", "5678"])
+
+
+@pytest.fixture
+def db():
+    return HeadHunterDataBase("test_hh_db")
+
+
+@pytest.fixture
+def db_manager():
+    return HeadHunterDataBaseManager("test_hh_db_manager")
+
+
+@pytest.fixture
+def user_interaction():
+    return UserInteraction()
 
 
 @pytest.fixture
@@ -51,16 +67,6 @@ def row_employers() -> dict:
             "alternate_url": "http://example.com/company/789",
             "area": "Москва"
         }
-
-
-@pytest.fixture
-def db():
-    return HeadHunterDataBase("test_hh_db")
-
-
-@pytest.fixture
-def db_manager():
-    return HeadHunterDataBaseManager("test_hh_db_manager")
 
 
 @pytest.fixture

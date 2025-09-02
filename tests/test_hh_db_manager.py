@@ -5,6 +5,7 @@ import pytest
 
 from src.hh_db_manager import HeadHunterDataBaseManager
 
+
 @patch("psycopg2.connect")
 def test_open_connection(mock_connect, db_manager):
     mock_conn = MagicMock()
@@ -52,7 +53,7 @@ def test_execute_query_success(db_manager):
 
 
 def test_execute_query_no_connection(db_manager):
-    db_manager._conn = MagicMock()
+    db_manager._conn = None
     with pytest.raises(RuntimeError, match="Соединение с базой данных не открыто"):
         db_manager._execute_query("SELECT * FROM test")
 
@@ -135,6 +136,3 @@ def test_get_vacancies_with_keyword(db_manager):
     query = mock_execute.call_args[0][0]
     assert "SELECT c.employer_name, v.vac_name, v.salary_from" in query
     assert "WHERE v.vac_name ILIKE %s" in query
-
-
-

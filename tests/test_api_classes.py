@@ -134,3 +134,19 @@ def test_format_employers(row_employers: dict) -> None:
     assert companies["employer_id"] == "789"
     assert companies["name"] == "Купер"
     assert companies["url"] == "http://example.com/company/789"
+
+
+def test_get_formatted_data(api_vac_source):
+    api_vac_source._get_total_vacancies = MagicMock(side_effect=[
+        [{"id": "1", "salary": {"currency": "RUR", "from": 100, "to": 200}}],  # для первой компании
+        [{"id": "2", "salary": {"currency": "USD", "from": 50, "to": 100}}]   # для второй
+    ])
+    api_vac_source.filter_vacancies = (MagicMock
+                                       (side_effect=lambda x: [v for v in x if v["salary"]["currency"] == "RUR"]))
+    api_vac_source.format_vacancies = (MagicMock
+                                       (side_effect=lambda x: [{"vac_id": v["id"]} for v in x]))
+
+    result = api_vac_source.get_formatted_data()
+
+    assert api_vac_source._get_total_vacancies.call_count == 2
+    assert result == [{"1234": [{"vac_id": "1"}]}, {"5678": []}]
