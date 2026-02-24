@@ -48,7 +48,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
     def get_companies_and_vacancies_count(self) -> list:
         """Получает список всех компаний и количество вакансий у каждой компании"""
         query = """
-                SELECT c.employer_name, COUNT(v.vacancy_id) AS vacancies_count, c.employer_url 
+                SELECT c.employer_name, COUNT(v.vacancy_id) AS vacancies_count, c.employer_url
                 FROM hh_companies AS c
                 LEFT JOIN hh_vacancies AS v ON c.company_id = v.company_id
                 GROUP BY c.employer_name, c.employer_url
@@ -69,7 +69,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
     def get_avg_salary(self) -> list:
         """Получает среднюю зарплату по вакансиям у каждой компании"""
         query = """
-                SELECT c.employer_name, AVG(v.average_salary) AS average_salary, c.employer_url 
+                SELECT c.employer_name, AVG(v.average_salary) AS average_salary, c.employer_url
                 FROM hh_companies AS c
                 LEFT JOIN hh_vacancies AS v ON c.company_id = v.company_id
                 GROUP BY c.employer_name, c.employer_url
@@ -84,7 +84,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
                 FROM hh_vacancies AS v
                 JOIN hh_companies AS c ON
                 c.company_id = v.company_id
-                JOIN (SELECT AVG(average_salary) AS avg_salary FROM hh_vacancies) AS s 
+                JOIN (SELECT AVG(average_salary) AS avg_salary FROM hh_vacancies) AS s
                 ON v.average_salary > s.avg_salary
                 ORDER BY v.average_salary DESC;
                 """
