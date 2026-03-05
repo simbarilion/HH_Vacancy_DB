@@ -103,7 +103,7 @@ HeadHunter Vacancy Database — инструмент для сбора, хран
 
 1. Клонируйте репозиторий проекта:
 ````
-git clone https://github.com/nadezhdapopova-spec/HH_Vacancy_DB.git
+git clone https://github.com/simbarilion/HH_Vacancy_DB.git
 
 cd HH_Vacancy_DB
 ````
