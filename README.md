@@ -151,4 +151,13 @@ CLI интерфейс
 
 ## Лицензия:
 
-Проект распространяется под [лицензией MIT](LICENSE)
+Проект распространяется под [LICENSE](LICENSE)
+
+## Автор
+Надежда Попова
+
+Python Developer
+
+📧 nadezhdapopova13@yandex.ru
+
+🔗 GitHub: simbarilion
