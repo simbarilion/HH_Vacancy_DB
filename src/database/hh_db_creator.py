@@ -134,59 +134,45 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         self.conn.commit()
         self.logger.info("Tаблица hh_vacancies успешно создана")
 
+    def _batch_insert(self, query: str, data: list[tuple]) -> None:
+        """Универсальная массовая вставка данных"""
+        with self.conn:
+            with self.conn.cursor() as cur:
+                execute_batch(cur, query, data)
+
     def save_data_to_table_hh_companies(self, employers: list[Employer]) -> None:
         """Сохранение данных о компаниях сайта HeadHunter.ru в базу данных"""
-        try:
-            with self.conn.cursor() as cur:
-                data = [(emp.employer_id, emp.name, emp.url) for emp in employers]
-                execute_batch(
-                    cur,
-                    """
-                    INSERT INTO hh_companies (hh_employer_id, employer_name, employer_url)
-                    VALUES (%s, %s, %s)
-                    ON CONFLICT (hh_employer_id) DO NOTHING
-                    """,
-                    data
-                )
-            self.conn.commit()
-            self.logger.info(f"Добавлено {len(data)} компаний")
-        except psycopg2.Error as e:
-            self.conn.rollback()
-            self.logger.error(f"Ошибка при добавлении компаний: {e}")
-            raise
+        data = [(emp.employer_id, emp.name, emp.url) for emp in employers]
+        query = """
+            INSERT INTO hh_companies (hh_employer_id, employer_name, employer_url)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (hh_employer_id) DO NOTHING
+        """
+        self._batch_insert(query, data)
+        self.logger.info(f"Добавлено {len(data)} компаний")
 
     def save_data_to_table_hh_vacancies(self, employers_vacancies: list[Vacancy]) -> None:
         """Сохранение данных о вакансиях компаний сайта HeadHunter.ru в базу данных"""
-        try:
-            with self.conn.cursor() as cur:
-                data = [
-                    (
-                        vac.vac_id,
-                        vac.name,
-                        vac.url,
-                        vac.employer_id,
-                        vac.area,
-                        vac.salary_from,
-                        vac.salary_to
-                    )
-                    for vac in employers_vacancies
-                ]
-                execute_batch(
-                    cur,
-                    """
-                    INSERT INTO hh_vacancies
-                    (hh_vac_id, vac_name, vac_url, hh_employer_id, vac_area, salary_from, salary_to)
-                    VALUES (%s, %s, %s, %s, %s, COALESCE(%s,0), COALESCE(%s,0))
-                    ON CONFLICT (hh_vac_id) DO NOTHING
-                    """,
-                    data
-                )
-            self.conn.commit()
-            self.logger.info(f"Добавлено {len(data)} вакансий")
-        except psycopg2.Error as e:
-            self.conn.rollback()
-            self.logger.error(f"Ошибка при добавлении вакансий: {e}")
-            raise
+        data = [
+            (
+                vac.vac_id,
+                vac.name,
+                vac.url,
+                vac.employer_id,
+                vac.area,
+                vac.salary_from,
+                vac.salary_to
+            )
+            for vac in employers_vacancies
+        ]
+        query = """
+            INSERT INTO hh_vacancies
+            (hh_vac_id, vac_name, vac_url, hh_employer_id, vac_area, salary_from, salary_to)
+            VALUES (%s, %s, %s, %s, %s, COALESCE(%s,0), COALESCE(%s,0))
+            ON CONFLICT (hh_vac_id) DO NOTHING
+        """
+        self._batch_insert(query, data)
+        self.logger.info(f"Добавлено {len(data)} вакансий")
 
     @staticmethod
     def _get_params() -> dict:
