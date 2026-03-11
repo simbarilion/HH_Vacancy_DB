@@ -7,7 +7,7 @@ from src.logging_config import LoggingConfigClassMixin
 
 
 class HeadHunterDataBaseManager(LoggingConfigClassMixin):
-    """Класс для создания запросов к базе данных с компаниями и вакансиями сайта HeadHunter.ru"""
+    """Класс для создания запросов к базе данных с компаниями и вакансиями HH.ru"""
     def __init__(self, db_name: str) -> None:
         """Конструктор класса HeadHunterDataBaseManager"""
         super().__init__()
@@ -31,17 +31,22 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
             self._conn.close()
             self.logger.info("Соединение с базой данных закрыто")
 
-    def _execute_query(self, query: str | tuple, params: Optional[tuple] = None) -> list:
+    def _execute_query(self, query: str | tuple, params: Optional[tuple] = None) -> list[tuple]:
         """Выполняет запрос к базе данных и возвращает результат"""
         if self._conn is None:
             raise RuntimeError("Соединение с базой данных не открыто")
         try:
             with self._conn.cursor() as cur:
                 cur.execute(query, params)
-                rows = cur.fetchall()
+                if cur.description:         # есть ли результаты
+                    rows = cur.fetchall()
+                else:
+                    rows = []
+            self._conn.commit()
             self.logger.info(f"Запрос к базе данных {self._hh_dbname} выполнен успешно")
-            return rows  # type: ignore
+            return rows                     # type: ignore
         except psycopg2.Error as e:
+            self._conn.rollback()
             self.logger.error(f"Ошибка при выполнении запроса: {e}")
             raise
 

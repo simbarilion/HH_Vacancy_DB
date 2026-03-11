@@ -25,7 +25,7 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
     def __enter__(self) -> "HeadHunterDataBase":
         """Открывает соединение с базой данных"""
         try:
-            self._conn = psycopg2.connect(**self._params, dbname=self._hh_dbname)
+            self._conn = psycopg2.connect(**self._params, dbname=self.hh_dbname)
             self._conn.autocommit = False
             self.logger.info("Соединение с базой данных открыто")
             return self
@@ -40,12 +40,13 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
             self.logger.info("Соединение с базой данных закрыто")
 
     @property
-    def get_hh_dbname(self) -> str:
-        """Возвращает название базы данных с компаниями и вакансиями сайта HeadHunter.ru"""
+    def hh_dbname(self) -> str:
+        """Возвращает название базы данных"""
         return self._hh_dbname
 
     @property
     def conn(self):
+        """Объект conn - соединения с базой данных"""
         if not self._conn:
             raise RuntimeError("DB connection not initialized")
         return self._conn
@@ -73,16 +74,16 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
             if is_exists:
                 cur.execute(
                     sql.SQL("DROP DATABASE {}").format(
-                        sql.Identifier(self._hh_dbname)
+                        sql.Identifier(self.hh_dbname)
                     )
                 )
-                self.logger.info(f"База данных {self._hh_dbname} удалена")
+                self.logger.info(f"База данных {self.hh_dbname} удалена")
             cur.execute(
                 sql.SQL("CREATE DATABASE {}").format(
-                    sql.Identifier(self._hh_dbname)
+                    sql.Identifier(self.hh_dbname)
                 )
             )
-            self.logger.info(f"База данных {self._hh_dbname} создана")
+            self.logger.info(f"База данных {self.hh_dbname} создана")
         except psycopg2.Error as e:
             self.logger.error(f"Ошибка при создании базы данных: {e}")
             raise

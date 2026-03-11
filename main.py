@@ -1,4 +1,4 @@
-from src.services.hh_data_coordinator import HeadHunterDataCoordinator
+from src.services.hh_coordinator import HeadHunterDataCoordinator
 from src.ui.user_interaction import UserInteraction
 
 # employer_id = {"Avito": "84585", "Точка банк": "2324020", "Купер": "1272486", "Aston": "6093775", "VK": "15478",
@@ -17,11 +17,10 @@ def main() -> None:
         print(user_interaction.get_greeting())
         user_interaction.loading_output()
         data_coordinator = HeadHunterDataCoordinator(EMPLOYER_ID, DB_NAME)
-        data_coordinator.create_hh_database()
-        data_coordinator.create_db_manager_obj()
+        data_coordinator.setup_database()
         while True:
             user_interaction.get_search_query()
-            print(data_coordinator.execute_query(user_interaction.choice, user_interaction.key_word))
+            print(data_coordinator.query(user_interaction.choice, user_interaction.key_word))
 
             if not user_interaction.is_restart():
                 user_interaction.get_farewell()
@@ -31,7 +30,7 @@ def main() -> None:
         print("Не удалось загрузить данные. Попробуйте повторить позже")
     finally:
         if data_coordinator:
-            data_coordinator.close_db_manager_obj_connection()
+            data_coordinator.close()
 
 
 if __name__ == "__main__":
