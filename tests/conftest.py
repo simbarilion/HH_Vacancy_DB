@@ -3,6 +3,7 @@ import pytest
 from src.api.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
 from src.database.hh_db_creator import HeadHunterDataBase
 from src.database.hh_db_manager import HeadHunterDataBaseManager
+from src.models.vacancy import Vacancy
 from src.ui.user_interaction import UserInteraction
 
 
@@ -11,14 +12,10 @@ def api_vac_source():
     """Фикстура для класса HeadHunterVacanciesSource"""
     return HeadHunterVacanciesSource(employers_id=["12345"])
 
-def make_mock_response_json(items=None, pages=1):
-    """Фикстура для мок-ответа API"""
-    if items is None:
-        items = []
-    return {
-        "items": items,
-        "pages": pages
-    }
+@pytest.fixture
+def api_emp_source():
+    """Фикстура для класса HeadHunterEmployersSource"""
+    return HeadHunterEmployersSource(employers_id=["12345"])
 
 @pytest.fixture
 def vacancy_json():
@@ -33,13 +30,29 @@ def vacancy_json():
             }
         ]
 
-
+@pytest.fixture
+def employer_json():
+    """Тестовая информация о компании в JSON формате"""
+    return [
+            {
+                "id": "1",
+                "name": "Employer 1",
+                "alternate_url": "https://hh.ru/employer/1",
+            }
+        ]
 
 @pytest.fixture
-def api_companies_source() -> HeadHunterEmployersSource:
-    """Возвращает объект класса HeadHunterEmployersSource"""
-    return HeadHunterEmployersSource(["1234", "5678"])
-
+def vacancy():
+    """Объект вакансии"""
+    return Vacancy(
+        vac_id="1",
+        name="Vacancy 1",
+        url="https://hh.ru/vacancy/1",
+        salary_from=1000,
+        salary_to=2000,
+        area="Москва",
+        employer_id="123"
+    )
 
 @pytest.fixture
 def db() -> HeadHunterDataBase:

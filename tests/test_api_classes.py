@@ -1,22 +1,12 @@
 from json import JSONDecodeError
-from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from requests import HTTPError, Response
+import pytest
+import requests
 
 from src.api.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
+from src.models.employer import Employer
 from src.models.vacancy import Vacancy
-
-
-def make_mock_response_json(items: list[dict], pages: int) -> MagicMock:
-    """Возвращает фейковый Response в формате json"""
-    mock_resp = MagicMock(spec=Response)
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = {
-        "items": items,
-        "pages": pages
-    }
-    return mock_resp
 
 
 def test__get_total_vacancies_one_page(api_vac_source, vacancy_json):
@@ -26,7 +16,6 @@ def test__get_total_vacancies_one_page(api_vac_source, vacancy_json):
             "items": vacancy_json,
             "pages": 1
         }
-
         result = api_vac_source._get_employer_vacancies("12345")
 
         assert isinstance(result, list)
@@ -39,123 +28,81 @@ def test__get_total_vacancies_one_page(api_vac_source, vacancy_json):
         mock_get_response.assert_called_once()
 
 
-@patch("src.api_classes.requests.get")
-def test__get_total_vacancies_pages(mock_get: Any, api_vac_source: HeadHunterVacanciesSource) -> None:
+def test__get_total_vacancies_pages(api_vac_source, vacancy_json):
     """Проверяет ответ API с несколькими страницами для класса HeadHunterVacanciesSource"""
-    mock_get.return_value = make_mock_response_json(items=[{"id": 1, "name": "Vacancy 1"}], pages=2)
-
-    result = api_vac_source._get_employer_vacancies()
+    with patch.object(HeadHunterVacanciesSource, "_get_response") as mock_get_response:
+        mock_get_response.return_value = {
+            "items": vacancy_json,
+            "pages": 2
+        }
+        result = api_vac_source._get_employer_vacancies("12345")
 
     assert isinstance(result, list)
     assert len(result) == 2
-    assert result[0]["name"] == "Vacancy 1"
-    mock_get.assert_called()
+    assert result[0].name == "Vacancy 1"
+    mock_get_response.assert_called()
 
 
-def test__get_total_vacancies_json_error(api_vac_source: HeadHunterVacanciesSource) -> None:
+def test__get_total_vacancies_json_error(api_vac_source):
     """Проверяет возникновение исключения JSONDecodeError для класса HeadHunterVacanciesSource"""
-    mock_response = MagicMock()
-    mock_response.raise_for_status.return_value = 200
-    mock_response.json.side_effect = JSONDecodeError("err", "", 0)
+    with patch.object(HeadHunterVacanciesSource, "_get_response", side_effect=JSONDecodeError("err", "", 0)):
+        with pytest.raises(JSONDecodeError):
+            api_vac_source._get_employer_vacancies("12345")
 
-    with patch("requests.get", return_value=mock_response):
-        result = api_vac_source._get_total_vacancies()
-
-    assert result == []
-    mock_response.raise_for_status.assert_called_once()
-    mock_response.json.assert_called_once()
-
-
-def test__get_total_vacancies_status_error(api_vac_source: HeadHunterVacanciesSource) -> None:
-    """Проверяет возникновение исключения HTTPError для класса HeadHunterVacanciesSource"""
-    mock_response = MagicMock()
-    mock_response.raise_for_status.side_effect = HTTPError()
-
-    with patch("requests.get", return_value=mock_response):
-        result = api_vac_source._get_total_vacancies()
-
-    assert result == []
-    mock_response.raise_for_status.assert_called_once()
+def test__get_total_vacancies_status_error(api_vac_source):
+    """Проверяет возникновение исключения requests.exceptions.RequestException для класса HeadHunterVacanciesSource"""
+    with patch.object(HeadHunterVacanciesSource, "_get_response", side_effect=requests.exceptions.RequestException("err", "", 0)):
+        with pytest.raises(requests.exceptions.RequestException):
+            api_vac_source._get_employer_vacancies("12345")
 
 
-def test__get_companies(api_companies_source: HeadHunterEmployersSource) -> None:
+def test__get_total_vacancies_none(api_vac_source):
+    """Проверяет поведение класса HeadHunterVacanciesSource при пустом ответе"""
+    with patch.object(HeadHunterVacanciesSource, "_get_response", return_value=None):
+        result = api_vac_source._get_employer_vacancies("12345")
+        assert result == []
+
+
+def test_get_formatted_data(api_emp_source, employer_json):
     """Проверяет ответ API с одной страницей для класса HeadHunterEmployersSource"""
-    mock_response = MagicMock()
-    mock_response.raise_for_status.return_value = 200
-    mock_response.json.return_value = {"id": 1, "name": "Company 1"}
+    with patch.object(HeadHunterEmployersSource, "_get_response") as mock_get_response:
+        mock_get_response.return_value = {
+            "id": "1",
+            "name": "Employer 1",
+            "alternate_url": "https://hh.ru/employer/1"
+        }
+        result = api_emp_source.get_formatted_data()
 
-    with patch("requests.get", return_value=mock_response):
-        result = api_companies_source._get_response("url", headers={"User": "user"}, params=None)
-
-    assert result == {"id": 1, "name": "Company 1"}
-    mock_response.raise_for_status.assert_called_once()
-    mock_response.json.assert_called_once()
-
-
-def test__get_companies_json_error(api_companies_source: HeadHunterEmployersSource) -> None:
-    """Проверяет возникновение исключения JSONDecodeError для класса HeadHunterEmployersSource"""
-    mock_response = MagicMock()
-    mock_response.raise_for_status.return_value = 200
-    mock_response.json.side_effect = JSONDecodeError("err", "", 0)
-
-    with patch("requests.get", return_value=mock_response):
-        result = api_companies_source.get_formatted_data()
-
-    assert result == []
-    mock_response.raise_for_status.assert_called()
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert isinstance(result[0], Employer)
+        assert result[0].name == "Employer 1"
+        assert result[0].url == "https://hh.ru/employer/1"
+        mock_get_response.assert_called_once()
 
 
-def test__get_companies_status_error(api_companies_source: HeadHunterEmployersSource) -> None:
-    """Проверяет возникновение исключения HTTPError для класса HeadHunterEmployersSource"""
-    mock_response = MagicMock()
-    mock_response.raise_for_status.side_effect = HTTPError()
-
-    with patch("requests.get", return_value=mock_response):
-        result = api_companies_source.get_formatted_data()
+def test_get_formatted_data_json_error(api_emp_source):
+    """
+    Проверяет обработку JSONDecodeError, requests.exceptions.RequestException
+    для класса HeadHunterEmployersSource
+    """
+    with patch.object(HeadHunterEmployersSource, "_get_response", return_value=None):
+        result = api_emp_source.get_formatted_data()
 
     assert result == []
-    mock_response.raise_for_status.assert_called()
 
 
-def test_format_vacancies(row_vacancies: list[dict]) -> None:
-    """Проверяет форматирование данных о вакансиях"""
-    source = HeadHunterVacanciesSource(["1234", "5678"])
-    vacancies = source.format_vacancies(row_vacancies)
+def test_get_formatted_data_for_vacancies(api_vac_source, vacancy):
+    """Проверяет преобразование данных из API HH о вакансиях"""
+    with patch.object(HeadHunterVacanciesSource, "_get_employer_vacancies") as mock_get_vacancies:
+        mock_get_vacancies.return_value = [vacancy]
+        result = api_vac_source.get_formatted_data()
 
-    assert len(vacancies) == 2
-
-    assert vacancies[0]["vac_id"] == "123"
-    assert vacancies[0]["name"] == "Python Developer"
-    assert vacancies[0]["url"] == "http://example.com/vacancy/123"
-    assert vacancies[0]["salary_from"] == 100000
-    assert vacancies[0]["salary_to"] == 150000
-    assert vacancies[0]["area"] == "Москва"
-
-
-def test_format_employers(row_employers: dict) -> None:
-    """Проверяет форматирование данных о компаниях"""
-    source = HeadHunterEmployersSource(["1234", "5678"])
-    companies = source.format_employers(row_employers)
-
-    assert len(companies) == 3
-
-    assert companies["employer_id"] == "789"
-    assert companies["name"] == "Купер"
-    assert companies["url"] == "http://example.com/company/789"
-
-
-def test_get_formatted_data(api_vac_source: HeadHunterVacanciesSource) -> None:
-    """Проверяет форматирование данных о вакансиях компаний"""
-    api_vac_source._get_total_vacancies = MagicMock(side_effect=[
-        [{"id": "1", "salary": {"currency": "RUR", "from": 100, "to": 200}}],  # для первой компании
-        [{"id": "2", "salary": {"currency": "USD", "from": 50, "to": 100}}]   # для второй
-    ])
-    api_vac_source.filter_vacancies = (MagicMock
-                                       (side_effect=lambda x: [v for v in x if v["salary"]["currency"] == "RUR"]))
-    api_vac_source.format_vacancies = (MagicMock
-                                       (side_effect=lambda x: [{"vac_id": v["id"]} for v in x]))
-
-    result = api_vac_source.get_formatted_data()
-
-    assert api_vac_source._get_total_vacancies.call_count == 2
-    assert result == [{"1234": [{"vac_id": "1"}]}, {"5678": []}]
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert isinstance(result[0], Vacancy)
+        assert result[0].name == "Vacancy 1"
+        assert result[0].salary_from == 1000
+        assert result[0].salary_to == 2000
+        assert result[0].area == "Москва"
+        mock_get_vacancies.assert_called()

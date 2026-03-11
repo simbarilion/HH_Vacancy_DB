@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import psycopg2
 import pytest
+from psycopg2 import sql
 
 from src.database.hh_db_creator import HeadHunterDataBase
 
@@ -37,7 +38,9 @@ def test_create_database_new(db: HeadHunterDataBase) -> None:
     mock_cursor.execute.assert_any_call(
         "SELECT 1 FROM pg_database WHERE datname = %s", ("test_hh_db",)
     )
-    mock_cursor.execute.assert_any_call("CREATE DATABASE test_hh_db")
+    mock_cursor.execute.assert_any_call(
+        sql.SQL("CREATE DATABASE {}").format(sql.Identifier("test_hh_db"))
+    )
 
 
 def test_create_database_exists(db: HeadHunterDataBase) -> None:
@@ -49,8 +52,12 @@ def test_create_database_exists(db: HeadHunterDataBase) -> None:
     with patch("psycopg2.connect", return_value=mock_conn):
         db.create_database()
 
-    mock_cursor.execute.assert_any_call("DROP DATABASE test_hh_db")
-    mock_cursor.execute.assert_any_call("CREATE DATABASE test_hh_db")
+    mock_cursor.execute.assert_any_call(
+        sql.SQL("DROP DATABASE {}").format(sql.Identifier("test_hh_db"))
+    )
+    mock_cursor.execute.assert_any_call(
+        sql.SQL("CREATE DATABASE {}").format(sql.Identifier("test_hh_db"))
+    )
 
 
 def test_create_database_error(db: HeadHunterDataBase) -> None:
