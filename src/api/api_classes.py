@@ -118,7 +118,7 @@ class HeadHunterVacanciesSource(BaseAPISource):
                         employer_id=employer_id
                     )
                 )
-            if page >= data.get("pages", 0):
+            if page + 1 >= data.get("pages", 0):
                 break
         self.logger.info(f"Работодатель {employer_id}: {len(result)} вакансий")
         return result

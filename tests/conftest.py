@@ -7,9 +7,32 @@ from src.ui.user_interaction import UserInteraction
 
 
 @pytest.fixture
-def api_vac_source() -> HeadHunterVacanciesSource:
-    """Возвращает объект класса HeadHunterVacanciesSource"""
-    return HeadHunterVacanciesSource(["1234", "5678"])
+def api_vac_source():
+    """Фикстура для класса HeadHunterVacanciesSource"""
+    return HeadHunterVacanciesSource(employers_id=["12345"])
+
+def make_mock_response_json(items=None, pages=1):
+    """Фикстура для мок-ответа API"""
+    if items is None:
+        items = []
+    return {
+        "items": items,
+        "pages": pages
+    }
+
+@pytest.fixture
+def vacancy_json():
+    """Тестовая информация о вакансиях в JSON формате"""
+    return [
+            {
+                "id": "1",
+                "name": "Vacancy 1",
+                "alternate_url": "https://hh.ru/vacancy/1",
+                "salary": {"from": 1000, "to": 2000, "currency": "RUR"},
+                "area": {"name": "Москва"}
+            }
+        ]
+
 
 
 @pytest.fixture

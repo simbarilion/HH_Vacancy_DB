@@ -105,8 +105,8 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         """Создает таблицу для хранения данных о вакансиях компаний сайта HeadHunter.ru"""
         self._execute("""
             CREATE TABLE hh_vacancies (
-                vacancy_id SERIAL NOT NULL,
-                hh_vac_id VARCHAR NOT NULL UNIQUE,
+                vacancy_id SERIAL PRIMARY KEY,
+                hh_vac_id VARCHAR UNIQUE NOT NULL,
                 vac_name VARCHAR(255) NOT NULL,
                 vac_url TEXT NOT NULL,
                 hh_employer_id VARCHAR,
@@ -115,22 +115,18 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                 salary_to INTEGER,
                 
                 average_salary NUMERIC GENERATED ALWAYS AS (
-                    CASE
-                        WHEN salary_from > 0 AND salary_to > 0
-                            THEN (salary_from + salary_to) / 2
-                        WHEN salary_from = 0
-                            THEN salary_to
-                        WHEN salary_to = 0
-                            THEN salary_from
-                        ELSE NULL
-                    END
+                    COALESCE((salary_from + salary_to) / 2, salary_from, salary_to)
                 ) STORED,
 
-                CONSTRAINT pk_hh_vacancies_id PRIMARY KEY(vacancy_id),
-
-                CONSTRAINT fk_hh_vacancies_hh_employer_id FOREIGN KEY(hh_employer_id)
-                REFERENCES hh_companies(hh_employer_id) ON DELETE CASCADE
+                CONSTRAINT fk_hh_vacancies_hh_employer_id 
+                    FOREIGN KEY(hh_employer_id)
+                    REFERENCES hh_companies(hh_employer_id) 
+                    ON DELETE CASCADE
                 );
+            """)
+        self._execute("""
+            CREATE INDEX idx_vacancies_employer_id
+            ON hh_vacancies (hh_employer_id);
             """)
         self.conn.commit()
         self.logger.info("Tаблица hh_vacancies успешно создана")

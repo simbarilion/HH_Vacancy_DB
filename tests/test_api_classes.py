@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from requests import HTTPError, Response
 
 from src.api.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
+from src.models.vacancy import Vacancy
 
 
 def make_mock_response_json(items: list[dict], pages: int) -> MagicMock:
@@ -18,17 +19,24 @@ def make_mock_response_json(items: list[dict], pages: int) -> MagicMock:
     return mock_resp
 
 
-@patch("src.api_classes.requests.get")
-def test__get_total_vacancies_one_page(mock_get: Any, api_vac_source: HeadHunterVacanciesSource) -> None:
+def test__get_total_vacancies_one_page(api_vac_source, vacancy_json):
     """Проверяет ответ API с одной страницей для класса HeadHunterVacanciesSource"""
-    mock_get.return_value = make_mock_response_json(items=[{"id": 1, "name": "Vacancy 1"}], pages=1)
+    with patch.object(HeadHunterVacanciesSource, "_get_response") as mock_get_response:
+        mock_get_response.return_value = {
+            "items": vacancy_json,
+            "pages": 1
+        }
 
-    result = api_vac_source._get_total_vacancies()
+        result = api_vac_source._get_employer_vacancies("12345")
 
-    assert isinstance(result, list)
-    assert len(result) == 1
-    assert result[0]["name"] == "Vacancy 1"
-    mock_get.assert_called_once()
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert isinstance(result[0], Vacancy)
+        assert result[0].name == "Vacancy 1"
+        assert result[0].salary_from == 1000
+        assert result[0].salary_to == 2000
+        assert result[0].area == "Москва"
+        mock_get_response.assert_called_once()
 
 
 @patch("src.api_classes.requests.get")
@@ -36,7 +44,7 @@ def test__get_total_vacancies_pages(mock_get: Any, api_vac_source: HeadHunterVac
     """Проверяет ответ API с несколькими страницами для класса HeadHunterVacanciesSource"""
     mock_get.return_value = make_mock_response_json(items=[{"id": 1, "name": "Vacancy 1"}], pages=2)
 
-    result = api_vac_source._get_total_vacancies()
+    result = api_vac_source._get_employer_vacancies()
 
     assert isinstance(result, list)
     assert len(result) == 2
