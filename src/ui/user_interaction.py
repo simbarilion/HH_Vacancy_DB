@@ -1,12 +1,14 @@
 from datetime import datetime
 from typing import Optional
 
+from src.constants.query_type import QueryType
+
 
 class UserInteraction:
     """Класс для взаимодействия с пользователем"""
     def __init__(self) -> None:
         """Конструктор для класса UserInteraction"""
-        self.choice: int = 0
+        self.choice: Optional[QueryType] = None
         self.key_word: Optional[str] = None
 
     def get_search_query(self) -> None:
@@ -24,7 +26,10 @@ class UserInteraction:
             if choice == 6:
                 self.get_farewell()
                 raise SystemExit()
-            self.choice = choice
+            try:
+                self.choice = QueryType(choice)
+            except ValueError:
+                print("Некорректный пункт меню")
 
     def _get_key_word(self) -> None:
         """Получает от пользователя ключевое слово для запроса по ключевому слову"""
