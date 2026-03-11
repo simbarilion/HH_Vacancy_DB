@@ -1,9 +1,9 @@
 import pytest
 
-from src.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
-from src.hh_db_creator import HeadHunterDataBase
-from src.hh_db_manager import HeadHunterDataBaseManager
-from src.user_interaction import UserInteraction
+from src.api.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
+from src.database.hh_db_creator import HeadHunterDataBase
+from src.database.hh_db_manager import HeadHunterDataBaseManager
+from src.ui.user_interaction import UserInteraction
 
 
 @pytest.fixture

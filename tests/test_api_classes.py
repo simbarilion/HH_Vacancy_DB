@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from requests import HTTPError, Response
 
-from src.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
+from src.api.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
 
 
 def make_mock_response_json(items: list[dict], pages: int) -> MagicMock:

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import psycopg2
 import pytest
 
-from src.hh_db_creator import HeadHunterDataBase
+from src.database.hh_db_creator import HeadHunterDataBase
 
 
 def test_enter_success(db: HeadHunterDataBase) -> None:

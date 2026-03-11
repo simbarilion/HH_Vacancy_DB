@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from freezegun import freeze_time
 
-from src.user_interaction import UserInteraction
+from src.ui.user_interaction import UserInteraction
 
 
 def test_get_search_query_valid_3(user_interaction: UserInteraction) -> None:

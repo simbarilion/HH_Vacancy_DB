@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import psycopg2
 import pytest
 
-from src.hh_db_manager import HeadHunterDataBaseManager
+from src.database.hh_db_manager import HeadHunterDataBaseManager
 
 
 @patch("psycopg2.connect")

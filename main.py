@@ -1,5 +1,5 @@
-from src.hh_data_coordinator import HeadHunterDataCoordinator
-from src.user_interaction import UserInteraction
+from src.services.hh_data_coordinator import HeadHunterDataCoordinator
+from src.ui.user_interaction import UserInteraction
 
 # employer_id = {"Avito": "84585", "Точка банк": "2324020", "Купер": "1272486", "Aston": "6093775", "VK": "15478",
 #                "Контур": "41862", "Тензор": "67611", "Яндекс": "1740", "2ГИС": "64174", "Skyeng": "1122462"}

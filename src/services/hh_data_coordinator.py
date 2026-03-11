@@ -2,9 +2,11 @@ from typing import Any, Optional
 
 from tabulate import tabulate
 
-from src.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
-from src.hh_db_creator import HeadHunterDataBase
-from src.hh_db_manager import HeadHunterDataBaseManager
+from src.api.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
+from src.database.hh_db_creator import HeadHunterDataBase
+from src.database.hh_db_manager import HeadHunterDataBaseManager
+from src.models.employer import Employer
+from src.models.vacancy import Vacancy
 
 
 class HeadHunterDataCoordinator:
@@ -12,19 +14,19 @@ class HeadHunterDataCoordinator:
         """Конструктор класса HeadHunterDataCoordinator"""
         self._employers_id = employers_id
         self._db_name = db_name
-        self._hh_vacancies: list[dict] = self._get_hh_vacancies()
-        self._hh_companies: list[dict] = self._get_hh_companies()
+        self._hh_vacancies: list[Vacancy] = self._get_hh_vacancies()
+        self._hh_companies: list[Employer] = self._get_hh_companies()
         self.hh_query_manager: Optional[HeadHunterDataBaseManager] = None
 
-    def _get_hh_vacancies(self) -> list[dict]:
+    def _get_hh_vacancies(self) -> list[Vacancy]:
         """Возвращает информацию о вакансиях с сайта HeadHunter.ru, полученные через API"""
-        hh_vacancies = HeadHunterVacanciesSource(self._employers_id)
-        return hh_vacancies.get_formatted_data()
+        with HeadHunterVacanciesSource(self._employers_id) as hh_vacancies:
+            return hh_vacancies.get_formatted_data()
 
-    def _get_hh_companies(self) -> list[dict]:
+    def _get_hh_companies(self) -> list[Employer]:
         """Возвращает информацию о компаниях с сайта HeadHunter.ru, полученные через API"""
-        hh_companies = HeadHunterEmployersSource(self._employers_id)
-        return hh_companies.get_formatted_data()
+        with HeadHunterEmployersSource(self._employers_id) as hh_companies:
+            return hh_companies.get_formatted_data()
 
     def create_hh_database(self) -> None:
         """Создает объект класса HeadHunterDataBase"""
