@@ -51,7 +51,7 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
             raise RuntimeError("DB connection not initialized")
         return self._conn
 
-    def _execute(self, query: str, params: Any = None, fetch: bool = False) -> Any:
+    def _execute(self, query: str, params: Optional[tuple] = None, fetch: bool = False) -> Any:
         """Вспомогательный метод для выполнения SQL-запросов"""
         try:
            with self.conn.cursor() as cur:
@@ -95,7 +95,7 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                 company_id SERIAL PRIMARY KEY,
                 hh_employer_id VARCHAR UNIQUE,
                 employer_name VARCHAR(255) NOT NULL,
-                employer_url TEXT NOT NULL,
+                employer_url TEXT NOT NULL
                 );
             """)
         self.conn.commit()

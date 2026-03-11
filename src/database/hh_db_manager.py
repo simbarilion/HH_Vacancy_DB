@@ -56,7 +56,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
         query = """
                 SELECT c.employer_name, COUNT(v.vacancy_id) AS vacancies_count, c.employer_url
                 FROM hh_companies AS c
-                LEFT JOIN hh_vacancies AS v ON c.company_id = v.company_id
+                LEFT JOIN hh_vacancies AS v ON c.hh_employer_id = v.hh_employer_id
                 GROUP BY c.employer_name, c.employer_url
                 ORDER BY c.employer_name;
                 """
@@ -67,7 +67,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
         query = """
                 SELECT c.employer_name, v.vac_name, v.salary_from, v.salary_to, v.vac_area, v.vac_url
                 FROM hh_companies as c
-                JOIN hh_vacancies as v ON c.company_id = v.company_id
+                JOIN hh_vacancies as v ON c.hh_employer_id = v.hh_employer_id
                 ORDER BY c.employer_name, v.vac_name;
                 """
         return self._execute_query(query)
@@ -77,7 +77,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
         query = """
                 SELECT c.employer_name, AVG(v.average_salary) AS average_salary, c.employer_url
                 FROM hh_companies AS c
-                LEFT JOIN hh_vacancies AS v ON c.company_id = v.company_id
+                LEFT JOIN hh_vacancies AS v ON c.hh_employer_id = v.hh_employer_id
                 GROUP BY c.employer_name, c.employer_url
                 ORDER BY average_salary DESC;
                 """
@@ -89,7 +89,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
                 SELECT c.employer_name, v.vac_name, v.salary_from, v.salary_to, v.vac_area, v.vac_url
                 FROM hh_vacancies AS v
                 JOIN hh_companies AS c ON
-                c.company_id = v.company_id
+                c.hh_employer_id = v.hh_employer_id
                 JOIN (SELECT AVG(average_salary) AS avg_salary FROM hh_vacancies) AS s
                 ON v.average_salary > s.avg_salary
                 ORDER BY v.average_salary DESC;
@@ -101,7 +101,7 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
         query = """
                 SELECT c.employer_name, v.vac_name, v.salary_from, v.salary_to, v.vac_area, v.vac_url
                 FROM hh_vacancies AS v
-                JOIN hh_companies AS c ON c.company_id = v.company_id
+                JOIN hh_companies AS c ON c.hh_employer_id = v.hh_employer_id
                 WHERE v.vac_name ILIKE %s
                 ORDER BY c.employer_name, v.vac_name"""
         params = (f"%{key_word}%",)
