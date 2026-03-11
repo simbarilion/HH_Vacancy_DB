@@ -27,7 +27,7 @@ class HeadHunterDBCreator:
             self._db.save_data_to_table_hh_vacancies(vacancies)
 
 
-class HeadHunterDBManager:
+class HeadHunterDBCoordinator:
     """Отправляет SELECT-запросы, возвращает результат в виде таблицы данных"""
     _HEADERS = {
         QueryType.COMPANIES_VACANCIES_COUNT: ["Компания", "Количество вакансий", "Ссылка"],
@@ -39,12 +39,6 @@ class HeadHunterDBManager:
 
     def __init__(self, db_name: str):
         self._manager = HeadHunterDataBaseManager(db_name)
-
-    def open_connection(self):
-        self._manager.open_connection()
-
-    def close_connection(self):
-        self._manager.close_connection()
 
     def execute_query(self, query_type: QueryType, key_word: str = "") -> str:
         """Возвращает данные из базы данных в соответствии с запросом"""
@@ -66,3 +60,6 @@ class HeadHunterDBManager:
 
         header = self._HEADERS.get(choice, [])
         return tabulate(cleaned_result, headers=header, tablefmt="fancy_grid")
+
+    def close_connection(self):
+        self._manager.close_connection()
