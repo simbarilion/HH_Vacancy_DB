@@ -93,23 +93,23 @@ ThreadPoolExecutor (для параллельных API запросов)
 ````mermaid
 flowchart TD
 
-    CLI[CLI Interface\nUserInteraction]
+    CLI[CLI Interface<br>UserInteraction]
     
-    Coordinator[Application Coordinator\nHeadHunterDataCoordinator]
+    Coordinator[Application Coordinator<br>HeadHunterDataCoordinator]
 
-    API[API Layer\nHeadHunterAPI]
+    API[API Layer<br>HeadHunterAPI]
     
-    Sources[API Sources\nHeadHunterVacanciesSource\nHeadHunterEmployersSource]
+    Sources[API Sources<br>HeadHunterVacanciesSource<br>HeadHunterEmployersSource]
 
-    Models[Data Models\nEmployer\nVacancy]
+    Models[Data Models<br>Employer<br>Vacancy]
 
-    DBCreate[Database Creator\nHeadHunterDBCreator]
+    DBCreate[Database Creator<br>HeadHunterDBCreator]
 
-    DB[Database Layer\nHeadHunterDataBase]
+    DB[Database Layer<br>HeadHunterDataBase]
 
-    QueryCoordinator[Query Coordinator\nHeadHunterDBCoordinator]
+    QueryCoordinator[Query Coordinator<br>HeadHunterDBCoordinator]
 
-    QueryManager[Query Manager\nHeadHunterDataBaseManager]
+    QueryManager[Query Manager<br>HeadHunterDataBaseManager]
 
     PostgreSQL[(PostgreSQL Database)]
 
