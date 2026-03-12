@@ -11,16 +11,17 @@ from src.logging_config import LoggingConfigClassMixin
 
 class BaseAPISource(ABC, LoggingConfigClassMixin):
     """Базовый класс для работы с API"""
+
     def __init__(self) -> None:
         super().__init__()
         self.logger = self.configure()
         self.session = requests.Session()
 
         retry = Retry(
-            total=3,            # максимум 3 попытки
-            backoff_factor=1,   # задержка между повторами
+            total=3,  # максимум 3 попытки
+            backoff_factor=1,  # задержка между повторами
             status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["GET"]
+            allowed_methods=["GET"],
         )
         adapter = HTTPAdapter(max_retries=retry)  # определяет политику повторных попыток
         self.session.mount("https://", adapter)
@@ -33,12 +34,7 @@ class BaseAPISource(ABC, LoggingConfigClassMixin):
         self.session.close()
         self.logger.info("HTTP session закрыта")
 
-    def _get_response(
-            self,
-            url: str,
-            headers: Optional[dict] = None,
-            params: Optional[dict] = None
-        ) -> Optional[dict]:
+    def _get_response(self, url: str, headers: Optional[dict] = None, params: Optional[dict] = None) -> Optional[dict]:
         """Выполняет GET запрос и возвращает JSON"""
         try:
             response = self.session.get(url, headers=headers, params=params, timeout=10)
@@ -56,4 +52,3 @@ class BaseAPISource(ABC, LoggingConfigClassMixin):
     def get_formatted_data(self) -> list[dict]:
         """Возвращает список моделей данных"""
         pass
-

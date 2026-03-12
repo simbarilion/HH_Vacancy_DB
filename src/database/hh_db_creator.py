@@ -13,6 +13,7 @@ from src.models.vacancy import Vacancy
 
 class HeadHunterDataBase(LoggingConfigClassMixin):
     """Класс для создания базы данных с компаниями и вакансиями сайта HeadHunter.ru"""
+
     def __init__(self, dbname: str = "headhunter_vacancies") -> None:
         """Конструктор класса"""
         super().__init__()
@@ -45,7 +46,7 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
         return self._hh_dbname
 
     @property
-    def conn(self):
+    def conn(self) -> Any:
         """Объект conn - соединения с базой данных"""
         if not self._conn:
             raise RuntimeError("DB connection not initialized")
@@ -54,10 +55,10 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
     def _execute(self, query: str, params: Optional[tuple] = None, fetch: bool = False) -> Any:
         """Вспомогательный метод для выполнения SQL-запросов"""
         try:
-           with self.conn.cursor() as cur:
-               cur.execute(query, params)
-               if fetch:
-                   return cur.fetchall()
+            with self.conn.cursor() as cur:
+                cur.execute(query, params)
+                if fetch:
+                    return cur.fetchall()
         except psycopg2.Error as e:
             self.conn.rollback()
             self.logger.error(f"Ошибка при работе с базой данных: {e}")
@@ -72,17 +73,9 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
             cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (self._hh_dbname,))
             is_exists = cur.fetchone()
             if is_exists:
-                cur.execute(
-                    sql.SQL("DROP DATABASE {}").format(
-                        sql.Identifier(self.hh_dbname)
-                    )
-                )
+                cur.execute(sql.SQL("DROP DATABASE {}").format(sql.Identifier(self.hh_dbname)))
                 self.logger.info(f"База данных {self.hh_dbname} удалена")
-            cur.execute(
-                sql.SQL("CREATE DATABASE {}").format(
-                    sql.Identifier(self.hh_dbname)
-                )
-            )
+            cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(self.hh_dbname)))
             self.logger.info(f"База данных {self.hh_dbname} создана")
         except psycopg2.Error as e:
             self.logger.error(f"Ошибка при создании базы данных: {e}")
@@ -113,15 +106,13 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
                 vac_area TEXT,
                 salary_from INTEGER,
                 salary_to INTEGER,
-                
                 average_salary NUMERIC GENERATED ALWAYS AS (
                     COALESCE((salary_from + salary_to) / 2, salary_from, salary_to)
                 ) STORED,
-
-                CONSTRAINT fk_hh_vacancies_hh_employer_id 
-                    FOREIGN KEY(hh_employer_id)
-                    REFERENCES hh_companies(hh_employer_id) 
-                    ON DELETE CASCADE
+                CONSTRAINT fk_hh_vacancies_hh_employer_id
+                FOREIGN KEY(hh_employer_id)
+                REFERENCES hh_companies(hh_employer_id)
+                ON DELETE CASCADE
                 );
             """)
         self._execute("""
@@ -151,15 +142,7 @@ class HeadHunterDataBase(LoggingConfigClassMixin):
     def save_data_to_table_hh_vacancies(self, employers_vacancies: list[Vacancy]) -> None:
         """Сохранение данных о вакансиях компаний сайта HeadHunter.ru в базу данных"""
         data = [
-            (
-                vac.vac_id,
-                vac.name,
-                vac.url,
-                vac.employer_id,
-                vac.area,
-                vac.salary_from,
-                vac.salary_to
-            )
+            (vac.vac_id, vac.name, vac.url, vac.employer_id, vac.area, vac.salary_from, vac.salary_to)
             for vac in employers_vacancies
         ]
         query = """

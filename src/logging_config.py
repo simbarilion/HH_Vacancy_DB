@@ -17,14 +17,16 @@ class LoggingConfigClassMixin:
     :clear_log_on_start: удаляет старый лог-файл один раз при запуске,
     """
 
-    def __init__(self,
-                 name: Optional[str] = None,
-                 level: LogLevel = "INFO",
-                 log_file: Optional[str] = None,
-                 log_to_console: bool = False,
-                 clear_log_on_start: bool = True,
-                 fmt: str = "%(asctime)s - %(levelname)s - logger:%(name)s - module:%(module)s "
-                            "- func:%(funcName)s:%(lineno)d - %(message)s") -> None:
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        level: LogLevel = "INFO",
+        log_file: Optional[str] = None,
+        log_to_console: bool = False,
+        clear_log_on_start: bool = True,
+        fmt: str = "%(asctime)s - %(levelname)s - logger:%(name)s - module:%(module)s "
+        "- func:%(funcName)s:%(lineno)d - %(message)s",
+    ) -> None:
         """Конструктор для класса логгирования"""
         self.name = name or self._get_caller_module_name()
         self.level = level

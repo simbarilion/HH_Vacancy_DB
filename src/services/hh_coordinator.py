@@ -2,7 +2,7 @@ from typing import Optional
 
 from src.api.hh_api_service import HeadHunterAPI
 from src.constants.query_type import QueryType
-from src.database.hh_db_service import HeadHunterDBCreator, HeadHunterDBCoordinator
+from src.database.hh_db_service import HeadHunterDBCoordinator, HeadHunterDBCreator
 
 
 class HeadHunterDataCoordinator:
@@ -17,7 +17,7 @@ class HeadHunterDataCoordinator:
         self.db_creator = HeadHunterDBCreator(db_name)
         self.db_manager: Optional[HeadHunterDBCoordinator] = None
 
-    def setup_database(self):
+    def setup_database(self) -> None:
         companies = self.api.get_companies()
         vacancies = self.api.get_vacancies()
         self.db_creator.create_and_fill_db(companies, vacancies)

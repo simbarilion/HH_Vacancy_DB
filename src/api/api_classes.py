@@ -7,14 +7,11 @@ from src.models.vacancy import Vacancy
 
 class HeadHunterVacanciesSource(BaseAPISource):
     """Получение вакансий работодателей HH"""
+
     URL = "https://api.hh.ru/vacancies"
     HEADERS = {"User-Agent": "api-test-agent"}
-    BASE_PARAMS = {
-        "per_page": 100,
-        "only_with_salary": True,
-        "currency": "RUR",
-        "area": 113
-    }
+    BASE_PARAMS = {"per_page": 100, "only_with_salary": True, "currency": "RUR", "area": 113}
+
     def __init__(self, employers_id: list[str]) -> None:
         super().__init__()
         self._employers_id = employers_id
@@ -23,11 +20,8 @@ class HeadHunterVacanciesSource(BaseAPISource):
         """Получает вакансии всех работодателей"""
         vacancies: list[Vacancy] = []
 
-        with ThreadPoolExecutor(max_workers=5) as executor:   # запускает до 5 worker-потоков
-            results = executor.map(             # запросы идут параллельно
-                self._get_employer_vacancies,
-                self._employers_id
-            )
+        with ThreadPoolExecutor(max_workers=5) as executor:  # запускает до 5 worker-потоков
+            results = executor.map(self._get_employer_vacancies, self._employers_id)  # запросы идут параллельно
             for employer_vacancies in results:
                 vacancies.extend(employer_vacancies)
         self.logger.info(f"Всего получено {len(vacancies)} вакансий")
@@ -37,11 +31,7 @@ class HeadHunterVacanciesSource(BaseAPISource):
         """Проходит по страницам API и собирает все вакансии"""
         result: list[Vacancy] = []
         for page in range(max_pages):
-            params = {
-                **self.BASE_PARAMS,
-                "employer_id": employer_id,
-                "page": page
-            }
+            params = {**self.BASE_PARAMS, "employer_id": employer_id, "page": page}
             data = self._get_response(url=self.URL, headers=self.HEADERS, params=params)
             if not data:
                 self.logger.warning(f"Не удалось получить данные с API (страница {page})")
@@ -59,7 +49,7 @@ class HeadHunterVacanciesSource(BaseAPISource):
                         salary_from=salary.get("from") or 0,
                         salary_to=salary.get("to") or 0,
                         area=vac.get("area", {}).get("name", ""),
-                        employer_id=employer_id
+                        employer_id=employer_id,
                     )
                 )
             if page + 1 >= data.get("pages", 0):
@@ -70,6 +60,7 @@ class HeadHunterVacanciesSource(BaseAPISource):
 
 class HeadHunterEmployersSource(BaseAPISource):
     """Получение информации о работодателях"""
+
     URL = "https://api.hh.ru/employers"
     HEADERS = {"User-Agent": "api-test-agent"}
 
@@ -88,11 +79,7 @@ class HeadHunterEmployersSource(BaseAPISource):
             if not data:
                 continue
             employers.append(
-                Employer(
-                    employer_id=str(data.get("id")),
-                    name=data.get("name", ""),
-                    url=data.get("alternate_url", "")
-                )
+                Employer(employer_id=str(data.get("id")), name=data.get("name", ""), url=data.get("alternate_url", ""))
             )
         self.logger.info(f"Получена информация о {len(employers)} компаниях")
         return employers

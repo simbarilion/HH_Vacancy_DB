@@ -23,23 +23,8 @@ pytest-cov = "^6.2.1"
 
 [tool.poetry.group.lint.dependencies]
 flake8 = "^7.3.0"
-mypy = "^1.17.1"
 isort = "^6.0.1"
-
-[tool.mypy]
-disallow_untyped_defs=true
-warn_return_any=true
-exclude = """
-/(
-    .git
-    .venv
-    venv
-)/
-"""
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-ignore_errors = true
+black = "^26.3.1"
 
 [tool.black]
 line-length = 119

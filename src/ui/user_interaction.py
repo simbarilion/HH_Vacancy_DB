@@ -6,6 +6,7 @@ from src.constants.query_type import QueryType
 
 class UserInteraction:
     """Класс для взаимодействия с пользователем"""
+
     def __init__(self) -> None:
         """Конструктор для класса UserInteraction"""
         self.choice: Optional[QueryType] = None

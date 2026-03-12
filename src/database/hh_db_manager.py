@@ -8,6 +8,7 @@ from src.logging_config import LoggingConfigClassMixin
 
 class HeadHunterDataBaseManager(LoggingConfigClassMixin):
     """Класс для создания запросов к базе данных с компаниями и вакансиями HH.ru"""
+
     def __init__(self, db_name: str) -> None:
         """Конструктор класса HeadHunterDataBaseManager"""
         super().__init__()
@@ -33,25 +34,25 @@ class HeadHunterDataBaseManager(LoggingConfigClassMixin):
             self._conn.close()
             self.logger.info("Соединение с базой данных закрыто")
 
-    def _execute_query(self, query: str | tuple, params: Optional[tuple] = None) -> list[tuple]:
+    def _execute_query(self, query: str | tuple, params: Optional[tuple] = None) -> Optional[list[tuple]]:
         """Выполняет запрос к базе данных и возвращает результат"""
         self._ensure_connection()
         try:
             with self._conn.cursor() as cur:
                 cur.execute(query, params)
-                if cur.description:         # есть ли результаты
+                if cur.description:  # есть ли результаты
                     rows = cur.fetchall()
                 else:
                     rows = []
             self._conn.commit()
             self.logger.info(f"Запрос к базе данных {self._hh_dbname} выполнен успешно")
-            return rows                     # type: ignore
+            return rows  # type: ignore
         except psycopg2.Error as e:
             self._conn.rollback()
             self.logger.error(f"Ошибка при выполнении запроса: {e}")
             raise
 
-    def get_companies_and_vacancies_count(self) -> list:
+    def get_companies_and_vacancies_count(self) -> Optional[list]:
         """Получает список всех компаний и количество вакансий у каждой компании"""
         query = """
                 SELECT c.employer_name, COUNT(v.vacancy_id) AS vacancies_count, c.employer_url

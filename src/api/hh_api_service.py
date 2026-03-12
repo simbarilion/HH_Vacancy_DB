@@ -1,10 +1,11 @@
-from src.api.api_classes import HeadHunterVacanciesSource, HeadHunterEmployersSource
+from src.api.api_classes import HeadHunterEmployersSource, HeadHunterVacanciesSource
 from src.models.employer import Employer
 from src.models.vacancy import Vacancy
 
 
 class HeadHunterAPI:
     """Получение данных с HH.ru через API"""
+
     def __init__(self, employers_id: list[str]):
         self._employers_id = employers_id
 
