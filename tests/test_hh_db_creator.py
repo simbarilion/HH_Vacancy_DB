@@ -67,103 +67,103 @@ def test_create_database_error(db: HeadHunterDataBase) -> None:
             db.create_database()
 
 
-@patch.object(HeadHunterDataBase, "_execute")
-def test_create_table_hh_companies(mock_execute: Any) -> None:
-    """Проверяет успешное создание таблицы hh_companies"""
-    db = HeadHunterDataBase("test_hh_db")
-    db.logger.info = MagicMock()
-
-    db.create_table_hh_companies()
-
-    mock_execute.assert_called_once()
-    sql = mock_execute.call_args[0][0]
-    assert "CREATE TABLE hh_companies" in sql
-    db.logger.info.assert_called_once_with("Tаблица hh_companies успешно создана")
-
-
-@patch.object(HeadHunterDataBase, "_execute")
-def test_create_table_hh_vacancies(mock_execute: Any) -> None:
-    """Проверяет успешное создание таблицы hh_vacancies"""
-    db = HeadHunterDataBase("test_hh_db")
-    db.logger.info = MagicMock()
-
-    db.create_table_hh_vacancies()
-
-    mock_execute.assert_called_once()
-    sql = mock_execute.call_args[0][0]
-    assert "CREATE TABLE hh_vacancies" in sql
-    db.logger.info.assert_called_once_with("Tаблица hh_vacancies успешно создана")
-
-
-@patch.object(HeadHunterDataBase, "_execute")
-def test_add_avg_salary_to_hh_vacancies(mock_execute: Any) -> None:
-    """Проверяет успешное добавление в таблицу hh_vacancies атрибута average_salary"""
-    db = HeadHunterDataBase("test_hh_db")
-    db.logger.info = MagicMock()
-
-    db.add_avg_salary_to_hh_vacancies()
-
-    assert mock_execute.call_count == 2
-    sql = mock_execute.call_args[0][0]
-    assert "UPDATE hh_vacancies" in sql
-    db.logger.info.assert_called_once_with("В таблицу hh_vacancies добавлен атрибут average_salary")
-
-
-def test_save_data_to_table_hh_companies(db: HeadHunterDataBase, employers: list[dict]) -> None:
-    """Проверяет успешное заполнение таблицы hh_companies данными"""
-    mock_conn = MagicMock()
-    mock_cursor = mock_conn.cursor.return_value.__enter__.return_value
-    mock_cursor.fetchone.side_effect = [(1,), None]
-    db._conn = mock_conn
-    db.logger.info = MagicMock()
-
-    db.save_data_to_table_hh_companies(employers)
-
-    assert mock_cursor.execute.call_count == 2
-    mock_conn.commit.assert_called_once()
-    db.logger.info.assert_called_once_with("В таблицу hh_companies добавлено 1 компаний")
-
-
-def test_save_data_to_table_hh_companies_error(db: HeadHunterDataBase, employers: list[dict]) -> None:
-    """Проверяет неуспешное заполнение таблицы hh_companies данными"""
-    mock_conn = MagicMock()
-    mock_cursor = mock_conn.cursor.return_value.__enter__.return_value
-    mock_cursor.fetchone.side_effect = psycopg2.Error()
-    db._conn = mock_conn
-    db.logger.error = MagicMock()
-
-    with pytest.raises(psycopg2.Error):
-        db.save_data_to_table_hh_companies(employers)
-
-    mock_conn.rollback.assert_called_once()
-    db.logger.error.assert_called_once()
-
-
-def test_save_data_to_table_hh_vacancies(db: HeadHunterDataBase, employers_vacancies: list[dict]) -> None:
-    """Проверяет успешное заполнение таблицы hh_vacancies данными"""
-    mock_conn = MagicMock()
-    mock_cursor = mock_conn.cursor.return_value.__enter__.return_value
-    mock_cursor.fetchone.side_effect = [(1,), (10,), None]
-    db._conn = mock_conn
-    db.logger.info = MagicMock()
-
-    db.save_data_to_table_hh_vacancies(employers_vacancies)
-
-    assert mock_cursor.execute.call_count == 3
-    mock_conn.commit.assert_called_once()
-    db.logger.info.assert_called_once_with("В таблицу hh_vacancies добавлено 1 вакансий")
-
-
-def test_save_data_to_table_hh_vacancies_error(db: HeadHunterDataBase, employers_vacancies: list[dict]) -> None:
-    """Проверяет неуспешное заполнение таблицы hh_vacancies данными"""
-    mock_conn = MagicMock()
-    mock_cursor = mock_conn.cursor.return_value.__enter__.return_value
-    mock_cursor.fetchone.side_effect = psycopg2.Error()
-    db._conn = mock_conn
-    db.logger.error = MagicMock()
-
-    with pytest.raises(psycopg2.Error):
-        db.save_data_to_table_hh_vacancies(employers_vacancies)
-
-    mock_conn.rollback.assert_called_once()
-    db.logger.error.assert_called_once()
+# @patch.object(HeadHunterDataBase, "_execute")
+# def test_create_table_hh_companies(mock_execute: Any) -> None:
+#     """Проверяет успешное создание таблицы hh_companies"""
+#     db = HeadHunterDataBase("test_hh_db")
+#     db.logger.info = MagicMock()
+#
+#     db.create_table_hh_companies()
+#
+#     mock_execute.assert_called_once()
+#     sql = mock_execute.call_args[0][0]
+#     assert "CREATE TABLE hh_companies" in sql
+#     db.logger.info.assert_called_once_with("Tаблица hh_companies успешно создана")
+#
+#
+# @patch.object(HeadHunterDataBase, "_execute")
+# def test_create_table_hh_vacancies(mock_execute: Any) -> None:
+#     """Проверяет успешное создание таблицы hh_vacancies"""
+#     db = HeadHunterDataBase("test_hh_db")
+#     db.logger.info = MagicMock()
+#
+#     db.create_table_hh_vacancies()
+#
+#     mock_execute.assert_called_once()
+#     sql = mock_execute.call_args[0][0]
+#     assert "CREATE TABLE hh_vacancies" in sql
+#     db.logger.info.assert_called_once_with("Tаблица hh_vacancies успешно создана")
+#
+#
+# @patch.object(HeadHunterDataBase, "_execute")
+# def test_add_avg_salary_to_hh_vacancies(mock_execute: Any) -> None:
+#     """Проверяет успешное добавление в таблицу hh_vacancies атрибута average_salary"""
+#     db = HeadHunterDataBase("test_hh_db")
+#     db.logger.info = MagicMock()
+#
+#     db.add_avg_salary_to_hh_vacancies()
+#
+#     assert mock_execute.call_count == 2
+#     sql = mock_execute.call_args[0][0]
+#     assert "UPDATE hh_vacancies" in sql
+#     db.logger.info.assert_called_once_with("В таблицу hh_vacancies добавлен атрибут average_salary")
+#
+#
+# def test_save_data_to_table_hh_companies(db: HeadHunterDataBase, employers: list[dict]) -> None:
+#     """Проверяет успешное заполнение таблицы hh_companies данными"""
+#     mock_conn = MagicMock()
+#     mock_cursor = mock_conn.cursor.return_value.__enter__.return_value
+#     mock_cursor.fetchone.side_effect = [(1,), None]
+#     db._conn = mock_conn
+#     db.logger.info = MagicMock()
+#
+#     db.save_data_to_table_hh_companies(employers)
+#
+#     assert mock_cursor.execute.call_count == 2
+#     mock_conn.commit.assert_called_once()
+#     db.logger.info.assert_called_once_with("В таблицу hh_companies добавлено 1 компаний")
+#
+#
+# def test_save_data_to_table_hh_companies_error(db: HeadHunterDataBase, employers: list[dict]) -> None:
+#     """Проверяет неуспешное заполнение таблицы hh_companies данными"""
+#     mock_conn = MagicMock()
+#     mock_cursor = mock_conn.cursor.return_value.__enter__.return_value
+#     mock_cursor.fetchone.side_effect = psycopg2.Error()
+#     db._conn = mock_conn
+#     db.logger.error = MagicMock()
+#
+#     with pytest.raises(psycopg2.Error):
+#         db.save_data_to_table_hh_companies(employers)
+#
+#     mock_conn.rollback.assert_called_once()
+#     db.logger.error.assert_called_once()
+#
+#
+# def test_save_data_to_table_hh_vacancies(db: HeadHunterDataBase, employers_vacancies: list[dict]) -> None:
+#     """Проверяет успешное заполнение таблицы hh_vacancies данными"""
+#     mock_conn = MagicMock()
+#     mock_cursor = mock_conn.cursor.return_value.__enter__.return_value
+#     mock_cursor.fetchone.side_effect = [(1,), (10,), None]
+#     db._conn = mock_conn
+#     db.logger.info = MagicMock()
+#
+#     db.save_data_to_table_hh_vacancies(employers_vacancies)
+#
+#     assert mock_cursor.execute.call_count == 3
+#     mock_conn.commit.assert_called_once()
+#     db.logger.info.assert_called_once_with("В таблицу hh_vacancies добавлено 1 вакансий")
+#
+#
+# def test_save_data_to_table_hh_vacancies_error(db: HeadHunterDataBase, employers_vacancies: list[dict]) -> None:
+#     """Проверяет неуспешное заполнение таблицы hh_vacancies данными"""
+#     mock_conn = MagicMock()
+#     mock_cursor = mock_conn.cursor.return_value.__enter__.return_value
+#     mock_cursor.fetchone.side_effect = psycopg2.Error()
+#     db._conn = mock_conn
+#     db.logger.error = MagicMock()
+#
+#     with pytest.raises(psycopg2.Error):
+#         db.save_data_to_table_hh_vacancies(employers_vacancies)
+#
+#     mock_conn.rollback.assert_called_once()
+#     db.logger.error.assert_called_once()

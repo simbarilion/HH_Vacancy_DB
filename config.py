@@ -23,7 +23,7 @@ def config(filename: str = "database.ini", section: str = "postgresql") -> dict:
     db_user = os.getenv("DB_USER")
     db_password = os.getenv("DB_PASSWORD")
     if db_user is None or db_password is None:
-        raise EnvironmentError("Переменная окружения DB_USER не установлена")
+        raise EnvironmentError("Переменная окружения не установлена")
 
     db_config["user"] = db_user
     db_config["password"] = db_password
