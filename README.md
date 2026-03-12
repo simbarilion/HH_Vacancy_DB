@@ -90,6 +90,44 @@ ThreadPoolExecutor (для параллельных API запросов)
     main.py
 ````
 
+````mermaid
+flowchart TD
+
+    CLI[CLI Interface\nUserInteraction]
+    
+    Coordinator[Application Coordinator\nHeadHunterDataCoordinator]
+
+    API[API Layer\nHeadHunterAPI]
+    
+    Sources[API Sources\nHeadHunterVacanciesSource\nHeadHunterEmployersSource]
+
+    Models[Data Models\nEmployer\nVacancy]
+
+    DBCreate[Database Creator\nHeadHunterDBCreator]
+
+    DB[Database Layer\nHeadHunterDataBase]
+
+    QueryCoordinator[Query Coordinator\nHeadHunterDBCoordinator]
+
+    QueryManager[Query Manager\nHeadHunterDataBaseManager]
+
+    PostgreSQL[(PostgreSQL Database)]
+
+    CLI --> Coordinator
+
+    Coordinator --> API
+    API --> Sources
+    Sources --> Models
+
+    Coordinator --> DBCreate
+    DBCreate --> DB
+    DB --> PostgreSQL
+
+    Coordinator --> QueryCoordinator
+    QueryCoordinator --> QueryManager
+    QueryManager --> PostgreSQL
+````
+
 ### Проект разделён на несколько слоёв
 
 **1. API слой**
@@ -158,6 +196,31 @@ ThreadPoolExecutor (для параллельных API запросов)
 | salary_from    | зарплата от                  |
 | salary_to      | зарплата до                  |
 | average_salary | вычисляемая средняя зарплата |
+
+````mermaid
+erDiagram
+
+    hh_companies {
+        SERIAL company_id PK
+        VARCHAR hh_employer_id
+        VARCHAR employer_name
+        TEXT employer_url
+    }
+
+    hh_vacancies {
+        SERIAL vacancy_id PK
+        VARCHAR hh_vac_id
+        VARCHAR vac_name
+        TEXT vac_url
+        VARCHAR hh_employer_id FK
+        TEXT vac_area
+        INTEGER salary_from
+        INTEGER salary_to
+        NUMERIC average_salary
+    }
+
+    hh_companies ||--o{ hh_vacancies : "has vacancies"
+````
 
 - HeadHunterDataBaseManager
 
@@ -328,9 +391,11 @@ pytest tests/ -v
 
 - Настроены повторные попытки API запросов
 
-- Используется вычисляемое поле средней зарплаты
+- Используется вычисляемое поле средней зарплаты (generated column average_salary)
 
 - Все SQL запросы централизованы
+
+- Используется QueryType для связывания пунктов пользовательского меню с SQL-запросами к базе данных
 
 - Применён контекстный менеджер для работы с БД
 
